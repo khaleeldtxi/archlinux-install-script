@@ -82,7 +82,7 @@ partprobe "$DISK"
 echo "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 $ESP &>/dev/null
 
-BTRFS="/dev/nvme0n1p2"
+BTRFS="/dev/vda2"
 
 # Formatting the partition as BTRFS
 echo "Formatting the partition as BTRFS."
