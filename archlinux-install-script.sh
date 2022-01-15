@@ -54,15 +54,15 @@ do
 done
 
 # Deleting old partition scheme
-read -r -p "This will delete the current partition table on $DISK. Do you agree [y/N]? " response
-response=${response,,}
-if [[ "$response" =~ ^(yes|y)$ ]]; then
-    wipefs -af "$DISK" &>/dev/null
-    sgdisk -Zo "$DISK" &>/dev/null
-else
-    echo "Quitting."
-    exit
-fi
+#read -r -p "This will delete the current partition table on $DISK. Do you agree [y/N]? " response
+#response=${response,,}
+#if [[ "$response" =~ ^(yes|y)$ ]]; then
+#    wipefs -af "$DISK" &>/dev/null
+ #   sgdisk -Zo "$DISK" &>/dev/null
+#else
+ #   echo "Quitting."
+  #  exit
+#fi
 
 # Creating a new partition scheme
 echo "Creating new partition scheme on $DISK."
