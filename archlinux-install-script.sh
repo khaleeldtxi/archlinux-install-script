@@ -95,8 +95,8 @@ mkfs.fat -F 32 -n "EFI" "${DISK}1"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
-mkfs.btrfs -L ARCH-ROOT -f -n 32k "ROOT" "$BTRFS"
-mount ${DISK}p2 /mnt
+mkfs.btrfs -L ARCH-ROOT -f -n 32k "$BTRFS"
+mount $BTRFS /mnt
 
 # Creating BTRFS subvolumes
 echo "Creating BTRFS subvolumes."
