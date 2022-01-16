@@ -12,6 +12,9 @@ pacman -Syy
 # Installing curl
 pacman -S --noconfirm curl
 
+# Setting username
+read -r -p "Please enter username for a user account (leave empty to skip): " username
+
 # Selecting the kernel flavor to install
 kernel_selector () {
     echo "List of kernels:"
@@ -35,6 +38,7 @@ kernel_selector () {
     esac
 }
 
+kernel_selector
 
 # Checking the microcode to install
 CPU=$(grep vendor_id /proc/cpuinfo)
@@ -168,8 +172,6 @@ mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=a
 mkdir -p /mnt/boot/efi
 mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 
-kernel_selector
-
 # Pacstrap (setting up a base sytem onto the new root)
 echo "Installing the base system (it may take a while)."
 pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet nano firewalld zram-generator reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez sddm --noconfirm --needed
@@ -194,9 +196,6 @@ cat > /mnt/etc/hosts <<EOF
 ::1         localhost
 127.0.1.1   $hostname.localdomain   $hostname
 EOF
-
-# Setting username
-read -r -p "Please enter username for a user account (leave empty to skip): " username
 
 # Setting up locales
 read -r -p "Please insert the locale you use in this format (en_US): " locale
