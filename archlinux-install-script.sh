@@ -104,7 +104,6 @@ btrfs subvolume create /mnt/@ &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots &>/dev/null
 mkdir /mnt/@/.snapshots/1 &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots/1/snapshot &>/dev/null
-mkdir /mnt/@/boot &>/dev/null
 btrfs subvolume create /mnt/@/boot &>/dev/null
 btrfs subvolume create /mnt/@/home &>/dev/null
 btrfs subvolume create /mnt/@/root &>/dev/null
