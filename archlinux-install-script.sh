@@ -15,6 +15,9 @@ pacman -S --noconfirm curl
 # Enter username
 read -r -p "Please enter username for a user account (leave empty to skip): " username
 
+# Enter password for $username
+read -r -p "Please enter password for $username (leave empty to skip): " password
+
 # Enter hostname
 read -r -p "Please enter the hostname: " hostname
 
@@ -337,7 +340,7 @@ chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
 arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
 # Setting user password
-[ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username"
+[ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username", $password
 
 # Giving wheel user sudo access
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
