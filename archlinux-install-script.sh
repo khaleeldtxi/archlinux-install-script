@@ -73,6 +73,7 @@ parted -s "$DISK" \
     mkpart "Linux_Root" btrfs 513MiB 100%
 
 ESP="/dev/disk/by-partlabel/ESP"
+Root="/dev/disk/by-partlabel/Linux_Root"
 
 # Informing the Kernel of the changes
 echo "Informing the Kernel about the disk changes."
@@ -82,7 +83,7 @@ partprobe "$DISK"
 echo "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 $ESP &>/dev/null
 
-BTRFS="/dev/vda2"
+BTRFS="/dev/$Root"
 
 # Formatting the partition as BTRFS
 echo "Formatting the partition as BTRFS."
