@@ -18,6 +18,9 @@ read -r -p "Please enter username for a user account (leave empty to skip): " us
 # Enter hostname
 read -r -p "Please enter the hostname: " hostname
 
+# Enter locale
+read -r -p "Please insert the locale you use in this format (en_US): " locale
+
 # Selecting the kernel flavor to install
 kernel_selector () {
     echo "List of kernels:"
@@ -50,26 +53,6 @@ if [[ $CPU == *"AuthenticAMD"* ]]; then
 else
     microcode=intel-ucode
 fi
-
-# Selecting the target for the installation
-#PS3="Select the disk where Arch Linux is going to be installed: "
-#select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
-#do
-#    DISK=$ENTRY
-#    echo "Installing Arch Linux on $DISK."
-#    break
-#done
-
-# Deleting old partition scheme
-#read -r -p "This will delete the current partition table on $DISK. Do you agree [y/N]? " response
-#response=${response,,}
-#if [[ "$response" =~ ^(yes|y)$ ]]; then
-#    wipefs -af "$DISK" &>/dev/null
- #   sgdisk -Zo "$DISK" &>/dev/null
-#else
- #   echo "Quitting."
-  #  exit
-#fi
 
 echo "-------select your disk to format----------------"
 lsblk
@@ -179,7 +162,7 @@ mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 
 # Pacstrap (setting up a base sytem onto the new root)
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet nano firewalld zram-generator reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez sddm --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet nano firewalld zram-generator reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez sddm which tree --noconfirm --needed
 
 #pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland apparmor python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh --noconfirm --needed
 
@@ -202,7 +185,6 @@ cat > /mnt/etc/hosts <<EOF
 EOF
 
 # Setting up locales
-read -r -p "Please insert the locale you use in this format (en_US): " locale
 echo "$locale.UTF-8 UTF-8"  > /mnt/etc/locale.gen
 echo "LANG=$locale.UTF-8" > /mnt/etc/locale.conf
 
@@ -310,6 +292,7 @@ chmod 600 /boot/initramfs-linux* &>/dev/null
 mkinitcpio -P &>/dev/null
 
 # Snapper configuration
+echo "Configuring Snapper"
 umount /.snapshots
 rm -r /.snapshots
 snapper --no-dbus -c root create-config /
@@ -369,9 +352,11 @@ systemctl enable auditd --root=/mnt &>/dev/null
 systemctl enable fstrim.timer --root=/mnt &>/dev/null
 
 # Enabling NetworkManager
+echo "Enabling NetworkManager"
 systemctl enable NetworkManager --root=/mnt &>/dev/null
 
 # Enabling SDDM
+echo "Enabling sddm"
 systemctl enable sddm --root=/mnt &>/dev/null
 
 # Enabling AppArmor
