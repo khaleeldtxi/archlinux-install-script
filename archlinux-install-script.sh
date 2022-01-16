@@ -15,7 +15,8 @@ pacman -S --noconfirm curl
 # Enter username
 read -r -p "Please enter username for a user account (leave empty to skip): " username
 
-# Enter password for $username
+# Enter password for root & $username
+read -r -p "Please enter password for root user: " root_password
 read -r -p "Please enter password for $username (leave empty to skip): " password
 
 # Enter hostname
@@ -339,7 +340,8 @@ EOF
 chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
 arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
-# Setting user password
+# Setting root & user password
+echo -en "$root_password\n$root_password" | passwd
 [ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username", $password
 
 # Giving wheel user sudo access
@@ -369,6 +371,7 @@ systemctl enable apparmor --root=/mnt &>/dev/null
 # Enabling Firewalld
 echo "Enabling Firewalld."
 systemctl enable firewalld --root=/mnt &>/dev/null
+sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
 # Enabling Reflector timer
 echo "Enabling Reflector."
@@ -394,7 +397,20 @@ print "Enabling colours and animations in pacman."
 sed -i 's/#Color/Color\nILoveCandy/' /mnt/etc/pacman.conf
 sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /mnt/etc/pacman.conf
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /mnt/etc/pacman.conf
+sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
 
+sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /etc/makepkg.conf
+journalctl --vacuum-size=100M --vacuum-time=2weeks
+
+touch /etc/sysctl.d/99-swappiness.conf
+echo 'vm.swappiness=20' > /etc/sysctl.d/99-swappiness.conf
+
+#Install paru
+echo "Paru (AUR package helper) installation"
+git clone https://aur.archlinux.org/paru-bin.git
+cd paru-bin/ || exit
+makepkg -sirc
+cd "$HOME" || exit
 
 # Finishing up
 echo "Done, you may now wish to reboot (further changes can be done by chrooting into /mnt)."
