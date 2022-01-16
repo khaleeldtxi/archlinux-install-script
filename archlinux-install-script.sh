@@ -87,6 +87,7 @@ sgdisk -t 2:8300 ${DISK}
 sgdisk -c 1:"EFI" ${DISK}
 sgdisk -c 2:"ROOT" ${DISK}
 
+ESP=${DISK}1
 BTRFS=${DISK}2
 
 # Formatting the ESP as FAT32
