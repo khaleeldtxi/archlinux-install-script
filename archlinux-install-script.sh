@@ -172,9 +172,9 @@ kernel_selector
 
 # Pacstrap (setting up a base sytem onto the new root)
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet apparmor python-psutil nano pipewire-pulse pipewire-alsa pipewire-jack flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh sddm --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet nano firewalld zram-generator reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez sddm --noconfirm --needed
 
-#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland --noconfirm --needed
+#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland apparmor python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh --noconfirm --needed
 
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
@@ -317,11 +317,11 @@ chmod 750 /.snapshots
 
 # Installing GRUB
 echo "Installing GRUB on /boot/efi."
-grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt gcry_rijndael gcry_sha256 btrfs" --disable-shim-lock &>/dev/null
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt gcry_rijndael gcry_sha256 btrfs" --disable-shim-lock
 
 # Creating grub config file.
 echo "Creating GRUB config file."
-grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
+grub-mkconfig -o /boot/grub/grub.cfg
 
 # Adding user with sudo privilege
 if [ -n "$username" ]; then
