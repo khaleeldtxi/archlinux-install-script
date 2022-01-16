@@ -105,7 +105,7 @@ btrfs subvolume create /mnt/@/.snapshots &>/dev/null
 mkdir /mnt/@/.snapshots/1 &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots/1/snapshot &>/dev/null
 mkdir /mnt/@/boot &>/dev/null
-btrfs subvolume create /mnt/@/boot/grub &>/dev/null
+btrfs subvolume create /mnt/@/boot &>/dev/null
 btrfs subvolume create /mnt/@/home &>/dev/null
 btrfs subvolume create /mnt/@/root &>/dev/null
 btrfs subvolume create /mnt/@/srv &>/dev/null
@@ -172,7 +172,9 @@ kernel_selector
 
 # Pacstrap (setting up a base sytem onto the new root)
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet apparmor python-psutil nano pipewire-pulse pipewire-alsa pipewire-jack flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland 
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet apparmor python-psutil nano pipewire-pulse pipewire-alsa pipewire-jack flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh sddm --noconfirm --needed
+
+#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland --noconfirm --needed
 
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
