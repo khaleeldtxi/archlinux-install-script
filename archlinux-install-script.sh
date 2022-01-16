@@ -64,31 +64,37 @@ done
   #  exit
 #fi
 
-# Creating a new partition scheme
-echo "Creating new partition scheme on $DISK."
-parted -s "$DISK" \
-    mklabel gpt \
-    mkpart ESP fat32 1MiB 513MiB \
-    set 1 esp on \
-    mkpart "Linux_Root" btrfs 513MiB 100%
+echo "-------select your disk to format----------------"
+lsblk
+echo "Please enter disk: (example /dev/sda or /dev/nvmeon1)"
+read DISK
+echo -e "\nFormatting disk...\n$HR"
+echo "--------------------------------------"
 
-ESP="/dev/disk/by-partlabel/ESP"
-Root="/dev/disk/by-partlabel/Linux_Root"
+# disk prep
+sgdisk -Z ${DISK} # zap all on disk
+sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
 
-# Informing the Kernel of the changes
-echo "Informing the Kernel about the disk changes."
-partprobe "$DISK"
+# create partitions
+sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI SYS), default start block, 512MB
+sgdisk -n 2:0:0     ${DISK} # partition 2 (Root), default start, remaining
+
+# set partition types
+sgdisk -t 1:ef00 ${DISK}
+sgdisk -t 2:8300 ${DISK}
+
+# label partitions
+sgdisk -c 1:"EFI" ${DISK}
+sgdisk -c 2:"ROOT" ${DISK}
 
 # Formatting the ESP as FAT32
-echo "Formatting the EFI Partition as FAT32."
-mkfs.fat -F 32 $ESP &>/dev/null
-
-BTRFS="/dev/$Root"
+echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
+mkfs.fat -F 32 -n "EFI" "${DISK}p1"
 
 # Formatting the partition as BTRFS
-echo "Formatting the partition as BTRFS."
-mkfs.btrfs -L ARCH-ROOT -f -n 32k $BTRFS &>/dev/null
-mount $BTRFS /mnt
+echo "Formatting the Root partition as BTRFS."
+mkfs.btrfs -L ARCH-ROOT -f -n 32k "ROOT" "${DISK}p2"
+mount ${DISK}p2 /mnt
 
 # Creating BTRFS subvolumes
 echo "Creating BTRFS subvolumes."
