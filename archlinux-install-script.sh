@@ -12,8 +12,11 @@ pacman -Syy
 # Installing curl
 pacman -S --noconfirm curl
 
-# Setting username
+# Enter username
 read -r -p "Please enter username for a user account (leave empty to skip): " username
+
+# Enter hostname
+read -r -p "Please enter the hostname: " hostname
 
 # Selecting the kernel flavor to install
 kernel_selector () {
@@ -80,7 +83,7 @@ sgdisk -Z ${DISK} # zap all on disk
 sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
 
 # create partitions
-sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI SYS), default start block, 512MB
+sgdisk -n 1:0:+512M ${DISK} # partition 1 (UEFI SYS), default start block, 512MB
 sgdisk -n 2:0:0     ${DISK} # partition 2 (Root), default start, remaining
 
 # set partition types
@@ -136,12 +139,14 @@ chattr +C /mnt/@/var_lib_machines
 #Set the default BTRFS Subvol to Snapshot 1 before pacstrapping
 btrfs subvolume set-default "$(btrfs subvolume list /mnt | grep "@/.snapshots/1/snapshot" | grep -oP '(?<=ID )[0-9]+')" /mnt
 
+DATE=`date +"%Y-%m-%d %H:%M:%S"`
+
 cat << EOF >> /mnt/@/.snapshots/1/info.xml
 <?xml version="1.0"?>
 <snapshot>
   <type>single</type>
   <num>1</num>
-  <date>2022-01-17 12:00:00</date>
+  <date>$DATE</date>
   <description>First Root Filesystem</description>
   <cleanup>number</cleanup>
 </snapshot>
@@ -186,7 +191,6 @@ genfstab -U -p /mnt >> /mnt/etc/fstab
 sed -i 's#,subvolid=258,subvol=/@/.snapshots/1/snapshot,subvol=@/.snapshots/1/snapshot##g' /mnt/etc/fstab
 
 # Setting hostname
-read -r -p "Please enter the hostname: " hostname
 echo "$hostname" > /mnt/etc/hostname
 
 # Setting hosts file
