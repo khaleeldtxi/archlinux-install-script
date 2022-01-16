@@ -45,13 +45,13 @@ else
 fi
 
 # Selecting the target for the installation
-PS3="Select the disk where Arch Linux is going to be installed: "
-select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
-do
-    DISK=$ENTRY
-    echo "Installing Arch Linux on $DISK."
-    break
-done
+#PS3="Select the disk where Arch Linux is going to be installed: "
+#select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
+#do
+#    DISK=$ENTRY
+#    echo "Installing Arch Linux on $DISK."
+#    break
+#done
 
 # Deleting old partition scheme
 #read -r -p "This will delete the current partition table on $DISK. Do you agree [y/N]? " response
@@ -87,13 +87,15 @@ sgdisk -t 2:8300 ${DISK}
 sgdisk -c 1:"EFI" ${DISK}
 sgdisk -c 2:"ROOT" ${DISK}
 
+BTRFS=${DISK}2
+
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
-mkfs.fat -F 32 -n "EFI" "${DISK}p1"
+mkfs.fat -F 32 -n "EFI" "${DISK}1"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
-mkfs.btrfs -L ARCH-ROOT -f -n 32k "ROOT" "${DISK}p2"
+mkfs.btrfs -L ARCH-ROOT -f -n 32k "ROOT" "$BTRFS"
 mount ${DISK}p2 /mnt
 
 # Creating BTRFS subvolumes
