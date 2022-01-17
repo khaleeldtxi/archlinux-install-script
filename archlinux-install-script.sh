@@ -398,6 +398,7 @@ sed -i 's/#Color/Color\nILoveCandy/' /mnt/etc/pacman.conf
 sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /mnt/etc/pacman.conf
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /mnt/etc/pacman.conf
 sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
+pacman -Sy --noconfirm
 
 sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /etc/makepkg.conf
 journalctl --vacuum-size=100M --vacuum-time=2weeks
