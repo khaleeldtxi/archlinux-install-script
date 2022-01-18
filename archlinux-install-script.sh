@@ -81,12 +81,20 @@ sgdisk -t 2:8300 ${DISK}
 sgdisk -c 1:"EFI" ${DISK}
 sgdisk -c 2:"ROOT" ${DISK}
 
-ESP=${DISK}1
-BTRFS=${DISK}2
+# ESP=${DISK}1
+# BTRFS=${DISK}2
+
+if [[ "${DISK}" =~ "nvme" ]]; then
+    EFI=${DISK}p1
+    BTRFS=${DISK}p2
+else
+    EFI=${DISK}1
+    BTRFS=${DISK}2
+fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
-mkfs.fat -F 32 -n "EFI" "${DISK}1"
+mkfs.fat -F 32 -n "EFI" "${EFI}"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
