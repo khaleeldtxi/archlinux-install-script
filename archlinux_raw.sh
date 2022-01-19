@@ -77,10 +77,10 @@ echo -ne "Is this correct? yes/no:"
 read answer
 case $answer in
     y|Y|yes|Yes|YES)
-    $time_zone
-       n|N|no|NO|No)
+    $time_zone;;
+    n|N|no|NO|No)
     echo "Please enter your desired timezone e.g. Asia/Kolkata :" 
-    read new_timezone
+    read new_timezone;;
     *) echo "Wrong option. Try again";timezone;;
 esac
 }
