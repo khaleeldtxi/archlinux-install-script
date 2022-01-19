@@ -164,6 +164,7 @@ else
     microcode=intel-ucode
 fi
 
+diskpart () {
 # show disks present on system
 lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print NR,"/dev/"$2" - "$3}' # show disks with /dev/ prefix and size
 echo -ne "
@@ -178,7 +179,10 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 
-echo "Please enter path to disk: (example /dev/sda or /dev/nvmeon1)" DISK
+read -p "Please enter path to disk: (example /dev/sda or /dev/nvmeon1) " DISK
+}
+
+diskpart
 
 clear
 
