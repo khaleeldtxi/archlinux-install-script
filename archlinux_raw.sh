@@ -204,19 +204,18 @@ sgdisk -c 1:"EFI" ${DISK}
 sgdisk -c 2:"ROOT" ${DISK}
 
 # make filesystems
-echo -ne "
--------------------------------------------------------------------------
-                    Creating Filesystems
--------------------------------------------------------------------------
-"
+echo "Creating Filesystems"
 
-if [[ "${DISK}" =~ "nvme" ]]; then
-    EFI=${DISK}p1
-    BTRFS=${DISK}p2
-else
-    EFI=${DISK}1
-    BTRFS=${DISK}2
-fi
+EFI=${DISK}1
+BTRFS=${DISK}2
+
+#if [[ "${DISK}" =~ "nvme" ]]; then
+#    EFI=${DISK}p1
+#    BTRFS=${DISK}p2
+#else
+#    EFI=${DISK}1
+#    BTRFS=${DISK}2
+#fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
