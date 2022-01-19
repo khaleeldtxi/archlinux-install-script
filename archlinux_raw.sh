@@ -77,6 +77,7 @@ echo -ne "Is this correct? yes/no:"
 read answer
 case $answer in
     y|Y|yes|Yes|YES)
+    $time_zone
        n|N|no|NO|No)
     echo "Please enter your desired timezone e.g. Asia/Kolkata :" 
     read new_timezone
@@ -414,7 +415,7 @@ chmod 600 /mnt/etc/NetworkManager/conf.d/ip6-privacy.conf
 # Configuring the system.
 arch-chroot /mnt /bin/bash -e <<EOF
 # Setting up timezone
-ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime &>/dev/null
+ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
 
 # Setting up clock
 hwclock --systohc
