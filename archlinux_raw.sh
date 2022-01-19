@@ -201,9 +201,6 @@ case $ssd_drive in
 esac
 }
 
-
-# selection for disk type
-diskpart () {
 # show disks present on system
 lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print NR,"/dev/"$2" - "$3}' # show disks with /dev/ prefix and size
 echo -ne "
@@ -219,14 +216,8 @@ echo -ne "
 "
 
 echo "Please enter path to disk: (example /dev/sda or /dev/nvmeon1)"
-read option
-echo "DISK=$option" >> setup.conf
+read DISK
 
-drivessd
-set_option DISK $option
-}
-
-diskpart
 
 clear
 
@@ -236,7 +227,6 @@ echo -ne "
 -------------------------------------------------------------------------
 
 # disk prep
-wipefs -af "$DISK" &>/dev/null
 sgdisk -Z ${DISK} # zap all on disk
 sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
 
@@ -272,6 +262,7 @@ mkfs.fat -F 32 -n "EFI" "${EFI}"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
+wipefs -af "$BTRFS" &>/dev/null
 mkfs.btrfs -L ARCH-ROOT -f -n 32k "$BTRFS"
 mount -t btrfs $BTRFS /mnt
 
@@ -346,13 +337,6 @@ mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=a
 mkdir -p /mnt/boot/efi
 mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 
-if ! grep -qs '/mnt' /proc/mounts; then
-    echo "Drive is not mounted can not continue"
-    echo "Rebooting in 3 Seconds ..." && sleep 1
-    echo "Rebooting in 2 Seconds ..." && sleep 1
-    echo "Rebooting in 1 Second ..." && sleep 1
-    reboot now
-fi
 
 # Pacstrap (setting up a base sytem onto the new root)
 echo "Installing the base system (it may take a while)."
