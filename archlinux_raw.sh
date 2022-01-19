@@ -178,9 +178,8 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 
-echo "Please enter path to disk: (example /dev/sda or /dev/nvmeon1)" DISK
+read -r -p "Please enter path to disk: (example /dev/sda or /dev/nvmeon1)" DISK
 
-clear
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -207,16 +206,14 @@ sgdisk -c 2:"ROOT" ${DISK}
 # make filesystems
 echo "Creating Filesystems"
 
-EFI=${DISK}1
-BTRFS=${DISK}2
 
-#if [[ "${DISK}" =~ "nvme" ]]; then
-#    EFI=${DISK}p1
-#    BTRFS=${DISK}p2
-#else
-#    EFI=${DISK}1
-#    BTRFS=${DISK}2
-#fi
+if [[ "${DISK}" =~ "nvme" ]]; then
+    EFI=${DISK}p1
+    BTRFS=${DISK}p2
+else
+    EFI=${DISK}1
+    BTRFS=${DISK}2
+fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
