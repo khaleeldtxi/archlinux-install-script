@@ -164,7 +164,6 @@ else
     microcode=intel-ucode
 fi
 
-diskpart () {
 # show disks present on system
 lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print NR,"/dev/"$2" - "$3}' # show disks with /dev/ prefix and size
 echo -ne "
@@ -179,10 +178,7 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 
-read -p "Please enter path to disk: (example /dev/sda or /dev/nvmeon1) " DISK
-}
-
-diskpart
+echo "Please enter path to disk: (example /dev/sda or /dev/nvmeon1)" DISK
 
 clear
 
@@ -192,6 +188,7 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 # disk prep
+
 sgdisk -Z ${DISK} # zap all on disk
 sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
 
@@ -305,9 +302,9 @@ mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 
 # Pacstrap (setting up a base sytem onto the new root)
 echo "Installing the base system."
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager network-manager-applet nano firewalld zram-generator reflector mlocate man-db bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs mtools inetutils less man-pages texinfo vim git bluez sddm which tree --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree --noconfirm --needed
 
-#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland apparmor python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting --noconfirm --needed
+#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland apparmor bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db --noconfirm --needed
 
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
@@ -417,7 +414,8 @@ EOF
 chmod 600 /mnt/etc/NetworkManager/conf.d/ip6-privacy.conf
 
 # Configuring the system.
-arch-chroot /mnt /bin/bash -e <<EOF
+arch-chroot /mnt /bin/bash
+
 # Setting up timezone
 ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
 
@@ -464,7 +462,7 @@ EOF
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
 mkdir -p -m 700 /mnt/home/${username}/.config/autostart/
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop"
 [Desktop Entry]
 Type=Application
 Name=AppArmor Notify
@@ -556,12 +554,12 @@ git clone "https://github.com/ChrisTitusTech/zsh"
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 ln -s "~/zsh/.zshrc" ~/.zshrc
 
-export PATH=$PATH:~/.local/bin
-cp -r ~/ArchRaw/dotfiles/* ~/.config/
-pip install konsave
-konsave -i ~/ArchRaw/kde.knsv
-sleep 1
-konsave -a kde
+#export PATH=$PATH:~/.local/bin
+#cp -r ~/ArchRaw/dotfiles/* ~/.config/
+#pip install konsave
+#konsave -i ~/ArchRaw/kde.knsv
+#sleep 1
+#konsave -a kde
 
 echo -e "Installing CyberRe Grub theme..."
 THEME_DIR="/boot/grub/themes"
@@ -580,11 +578,8 @@ echo -e "Updating grub..."
 grub-mkconfig -o /boot/grub/grub.cfg
 echo -e "All set!"
 
-rm -r /root/ArchRaw
-rm -r /home/$USERNAME/ArchRaw
-
 cd $pwd
 
-#Finishing up
-echo "Done, you may now wish to reboot. Further changes can be done by chrooting into /mnt."
-exit
+# Finishing up
+#echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
+#exit
