@@ -186,7 +186,7 @@ echo -ne "
 -------------------------------------------------------------------------
                     Formating Disk
 -------------------------------------------------------------------------
-
+"
 # disk prep
 sgdisk -Z ${DISK} # zap all on disk
 sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
@@ -581,6 +581,6 @@ rm -r /home/$USERNAME/ArchRaw
 
 cd $pwd
 
-# Finishing up
-#echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
-#exit
+#Finishing up
+echo "Done, you may now wish to reboot. Further changes can be done by chrooting into /mnt."
+exit
