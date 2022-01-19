@@ -582,5 +582,5 @@ rm -r /home/$USERNAME/ArchRaw
 cd $pwd
 
 # Finishing up
-echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
-exit
+#echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
+#exit
