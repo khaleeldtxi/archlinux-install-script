@@ -541,7 +541,7 @@ touch /etc/sysctl.d/99-swappiness.conf
 echo 'vm.swappiness=20' > /etc/sysctl.d/99-swappiness.conf
 
 #Install paru
-echo "Paru (AUR package helper) installation"
+echo "Paru AUR package helper installation"
 git clone https://aur.archlinux.org/paru-bin.git
 cd paru-bin/ || exit
 makepkg -sirc
