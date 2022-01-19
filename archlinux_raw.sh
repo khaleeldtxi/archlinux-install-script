@@ -12,22 +12,6 @@
 setfont ter-v22b
 clear
 
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-# set up a config file
-CONFIG_FILE=$SCRIPT_DIR/setup.conf
-if [ ! -f $CONFIG_FILE ]; then # check if file exists
-    touch -f $CONFIG_FILE # create file if not exists
-fi
-
-# set options in setup.conf
-set_option() {
-    if grep -Eq "^${1}.*" $CONFIG_FILE; then # check if option exists
-        sed -i -e "/^${1}.*/d" $CONFIG_FILE # delete option if exists
-    fi
-    echo "${1}=${2}" >>$CONFIG_FILE # add option
-}
-
 logo () {
 # This will be shown on every set as user is progressing
 echo -ne "
@@ -69,20 +53,16 @@ pacman -Syy
 userinfo () {
 # Enter username
 read -p "Please enter your username: " username
-set_option USERNAME ${username,,} # convert to lower case
 
 # Enter password for root & $username
 echo -ne "Please enter your password for $username: \n"
 read -s password # read password without echo
-set_option PASSWORD $password
 
 echo -ne "Please enter your password for root account: \n"
 read -s root_password
-#set_option ROOT_PASSWORD $root_password
 
 # Enter hostname
 read -rep "Please enter your hostname: " hostname
-set_option hostname $hostname
 }
 
 userinfo
@@ -97,11 +77,9 @@ echo -ne "Is this correct? yes/no:"
 read answer
 case $answer in
     y|Y|yes|Yes|YES)
-    set_option TIMEZONE $time_zone;;
-    n|N|no|NO|No)
+       n|N|no|NO|No)
     echo "Please enter your desired timezone e.g. Asia/Kolkata :" 
     read new_timezone
-    set_option TIMEZONE $new_timezone;;
     *) echo "Wrong option. Try again";timezone;;
 esac
 }
@@ -143,7 +121,6 @@ Please select key board layout from this list
 
 "
 read -p "Your key boards layout:" keymap
-set_option KEYMAP $keymap
 }
 
 keymap
@@ -185,21 +162,6 @@ if [[ $CPU == *"AuthenticAMD"* ]]; then
 else
     microcode=intel-ucode
 fi
-
-drivessd () {
-echo -ne "
-Is this an ssd? yes/no:
-"
-read ssd_drive
-
-case $ssd_drive in
-    y|Y|yes|Yes|YES)
-    echo "mountoptions=lazytime,relatime,compress=zstd,space_cache=v2,ssd,commit=120" >> setup.conf;;
-    n|N|no|NO|No)
-    echo "mountoptions=lazytime,relatime,compress=zstd,space_cache=v2,commit=120" >> setup.conf;;
-    *) echo "Wrong option. Try again";drivessd;;
-esac
-}
 
 # show disks present on system
 lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print NR,"/dev/"$2" - "$3}' # show disks with /dev/ prefix and size
@@ -260,7 +222,7 @@ mkfs.fat -F 32 -n "EFI" "${EFI}"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
-wipefs -af "$BTRFS" &>/dev/null
+wipefs -af "$BTRFS"
 mkfs.btrfs -L ARCH-ROOT -f -n 32k "$BTRFS"
 mount -t btrfs $BTRFS /mnt
 
