@@ -231,14 +231,27 @@ diskpart
 clear
 
 filesystem () {
-# This function will handle file systems. Choose from btrfs and ext4.
+# This function will handle file systems. At this movement we are handling only
+# btrfs and ext4. Others will be added in future.
 echo -ne "
-===============================================================================
-                        Selecting btrfs filesystem
-===============================================================================
+    Please Select your file system for both boot and root
+    1)      btrfs
+    2)      ext4
+    3)      luks with btrfs
+    0)      exit
 "
 read FS
-set_option FS btrfs;;
+case $FS in
+1) set_option FS btrfs;;
+2) set_option FS ext4;;
+3) 
+#echo -ne "Please enter your luks password: "
+#read -s luks_password # read password without echo
+#set_option luks_password $luks_password
+#set_option FS luks;;
+0) exit ;;
+*) echo "Wrong option please select again"; filesystem;;
+esac
 }
 
 filesystem
