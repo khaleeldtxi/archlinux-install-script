@@ -452,7 +452,8 @@ echo -ne "
 "
 
 # Configuring the system.
-arch-chroot /mnt /bin/bash
+arch-chroot /mnt /bin/bash -e <<EOF
+
     # Setting up timezone
     ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
     
@@ -471,7 +472,7 @@ arch-chroot /mnt /bin/bash
     -------------------------------------------------------------------------
     "
     # Installing GRUB
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt gcry_rijndael gcry_sha256 btrfs"
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
     
     # Creating grub config file.
     echo "Creating GRUB config file."
