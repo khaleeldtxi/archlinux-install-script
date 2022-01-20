@@ -521,7 +521,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Giving wheel user sudo access
     useradd -m -G wheel -s /bin/bash $username 
-    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' EDITOR=nano /etc/sudoers
+    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
     echo "Done"
