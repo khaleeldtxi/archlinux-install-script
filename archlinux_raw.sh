@@ -8,6 +8,9 @@
 #                    ██║  ██║██║  ██║╚██████╗██║  ██║ 
 #                    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ 
 #-------------------------------------------------------------------------
+#--by Khaleel --inspired by tommytran732, Chris Titus, MatMoul and many others
+#------------------------------------------------------------------------------
+#"
 
 setfont ter-v22b
 clear
@@ -15,16 +18,18 @@ clear
 logo () {
 # This will be shown on every set as user is progressing
 echo -ne "
--------------------------------------------------------------------------
+------------------------------------------------------------------------------
                      █████╗ ██████╗  ██████╗██╗  ██╗
                     ██╔══██╗██╔══██╗██╔════╝██║  ██║
                     ███████║██████╔╝██║     ███████║ 
                     ██╔══██║██╔══██╗██║     ██╔══██║ 
                     ██║  ██║██║  ██║╚██████╗██║  ██║ 
                     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝   
-------------------------------------------------------------------------
-            Please select presetup settings for your system              
-------------------------------------------------------------------------
+------------------------------------------------------------------------------
+                          --from Khaleel 
+------------------------------------------------------------------------------
+      --inspired by tommytran732, Chris Titus, MatMoul and many others
+------------------------------------------------------------------------------
 "
 }
 
@@ -38,13 +43,12 @@ sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 pacman -S --noconfirm curl pacman-contrib terminus-font reflector rsync grub gptfdisk btrfs-progs
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 
+iso=$(curl -4 ifconfig.co/country-iso)
 echo -ne "
 -------------------------------------------------------------------------
                     Setting up $iso mirrors for faster downloads
 -------------------------------------------------------------------------
 "
-
-iso=$(curl -4 ifconfig.co/country-iso)
 
 # Update mirrors
 reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
@@ -126,6 +130,8 @@ read -p "Your key boards layout:" keymap
 
 keymap
 
+clear
+
 # Enter locale
 read -r -p "Please insert the locale you use (in this format: en_US): " locale
 
@@ -164,69 +170,87 @@ else
     microcode=intel-ucode
 fi
 
-# show disks present on system
-lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print NR,"/dev/"$2" - "$3}' # show disks with /dev/ prefix and size
-echo -ne "
--------------------------------------------------------------------------
-                    Formating Disk
--------------------------------------------------------------------------
-         THIS WILL FORMAT AND DELETE ALL DATA ON THE DISK             
-        Please make sure you know what you are doing because         
-     after formating your disk there is no way to get data back      
-------------------------------------------------------------------------
-                select your disk to format
--------------------------------------------------------------------------
-"
 
-read -r -p "Please enter path to disk: (example /dev/sda or /dev/nvmeon1)" DISK
+logo
 
 
 echo -ne "
 -------------------------------------------------------------------------
-                    Formating Disk
+                          Disk Preparation
 -------------------------------------------------------------------------
 "
+
+# Selecting the target for the installation.
+PS3="Select the disk where Arch Linux is going to be installed: "
+select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
+do
+    DISK=$ENTRY
+    echo "Installing Arch Linux on $DISK."
+    break
+done
+
+
 # disk prep
+# Deleting old partition scheme.
+read -r -p "This will delete the current partition table on $DISK. Do you agree [y/N]? " response
+response=${response,,}
+if [[ "$response" =~ ^(yes|y)$ ]]; then
+     echo -ne "
+    -------------------------------------------------------------------------
+                                Formating Disk
+    -------------------------------------------------------------------------
+    "
+    wipefs -af "$DISK" &>/dev/null
+    sgdisk -Zo "$DISK" &>/dev/null
+    
+    # create partitions
+    sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
+    sgdisk -n 2:0:-0     ${DISK} # partition 2 (Root), default start, remaining
 
-sgdisk -Z ${DISK} # zap all on disk
-sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
+    # set partition types
+    sgdisk -t 1:ef00 ${DISK}
+    sgdisk -t 2:8300 ${DISK}
 
-# create partitions
-sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
-sgdisk -n 2:0:-0     ${DISK} # partition 2 (Root), default start, remaining
+    # label partitions
+    sgdisk -c 1:"ESP" ${DISK}
+    sgdisk -c 2:"ROOT" ${DISK}
+else
+    echo "Quitting."
+    exit
+fi
 
-# set partition types
-sgdisk -t 1:ef00 ${DISK}
-sgdisk -t 2:8300 ${DISK}
-
-# label partitions
-sgdisk -c 1:"EFI" ${DISK}
-sgdisk -c 2:"ROOT" ${DISK}
 
 # make filesystems
-echo "Creating Filesystems"
-
+echo -ne "
+-------------------------------------------------------------------------
+                          Creating Filesystems
+-------------------------------------------------------------------------
+"
 
 if [[ "${DISK}" =~ "nvme" ]]; then
-    EFI=${DISK}p1
+    ESP=${DISK}p1
     BTRFS=${DISK}p2
 else
-    EFI=${DISK}1
+    ESP=${DISK}1
     BTRFS=${DISK}2
 fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
-mkfs.fat -F 32 -n "EFI" "${EFI}"
+mkfs.fat -F 32 -n "ESP" "${ESP}"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
-wipefs -af "$BTRFS"
 mkfs.btrfs -L ARCH-ROOT -f -n 32k "$BTRFS"
 mount -t btrfs $BTRFS /mnt
 
 # Creating BTRFS subvolumes
-echo "Creating BTRFS subvolumes."
+
+echo -ne "
+-------------------------------------------------------------------------
+                      Creating BTRFS subvolumes
+-------------------------------------------------------------------------
+"
 btrfs subvolume create /mnt/@ &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots &>/dev/null
 mkdir /mnt/@/.snapshots/1 &>/dev/null
@@ -296,12 +320,16 @@ mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=a
 mkdir -p /mnt/boot/efi
 mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 
+echo -ne "
+-------------------------------------------------------------------------
+                      Installing the base system
+-------------------------------------------------------------------------
+"
 
 # Pacstrap (setting up a base sytem onto the new root)
-echo "Installing the base system."
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor --noconfirm --needed
 
-#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland apparmor bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db --noconfirm --needed
+#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db --noconfirm --needed
 
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
@@ -325,10 +353,14 @@ EOF
 echo "$locale.UTF-8 UTF-8"  > /mnt/etc/locale.gen
 echo "LANG=$locale.UTF-8" > /mnt/etc/locale.conf
 
+# Setting up keyboard layout.
+echo "KEYMAP=$keymap" > /mnt/etc/vconsole.conf
+
 # Configuring /etc/mkinitcpio.conf
 echo "Configuring /etc/mkinitcpio for ZSTD compression."
 sed -i 's,#COMPRESSION="zstd",COMPRESSION="zstd",g' /mnt/etc/mkinitcpio.conf
 
+echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
 
@@ -410,51 +442,62 @@ EOF
 
 chmod 600 /mnt/etc/NetworkManager/conf.d/ip6-privacy.conf
 
+echo -ne "
+-------------------------------------------------------------------------
+                      Configuring the system
+-------------------------------------------------------------------------
+"
+
 # Configuring the system.
 arch-chroot /mnt /bin/bash
+        # Setting up timezone
+        ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
+        
+        # Setting up clock
+        hwclock --systohc
+        
+         # Generating locales.my keys aren't even on
+        echo "Generating locales."
+        locale-gen &>/dev/null
+        
+        # Generating a new initramfs
+        echo "Creating a new initramfs."
+        chmod 600 /boot/initramfs-linux* &>/dev/null
+        mkinitcpio -P &>/dev/null
+        
+        # Snapper configuration
+        echo "Configuring Snapper"
+        umount /.snapshots
+        rm -r /.snapshots
+        snapper --no-dbus -c root create-config /
+        btrfs subvolume delete /.snapshots
+        mkdir /.snapshots
+        mount -a
+        chmod 750 /.snapshots
+        
+        logo
 
-# Setting up timezone
-ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
-
-# Setting up clock
-hwclock --systohc
-
- # Generating locales.my keys aren't even on
-echo "Generating locales."
-locale-gen &>/dev/null
-
-# Generating a new initramfs
-echo "Creating a new initramfs."
-chmod 600 /boot/initramfs-linux* &>/dev/null
-mkinitcpio -P &>/dev/null
-
-# Snapper configuration
-echo "Configuring Snapper"
-umount /.snapshots
-rm -r /.snapshots
-snapper --no-dbus -c root create-config /
-btrfs subvolume delete /.snapshots
-mkdir /.snapshots
-mount -a
-chmod 750 /.snapshots
-
-# Installing GRUB
-echo "Installing GRUB on /boot/efi."
-grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt gcry_rijndael gcry_sha256 btrfs" --disable-shim-lock
-
-# Creating grub config file.
-echo "Creating GRUB config file."
-grub-mkconfig -o /boot/grub/grub.cfg
-
-# Adding user with sudo privilege
-if [ -n "$username" ]; then
-    echo "Adding $username with root privilege."
-    useradd -m $username
-    usermod -aG wheel $username
-    groupadd -r audit
-    gpasswd -a $username audit
-fi
-EOF
+        echo -ne "
+        -------------------------------------------------------------------------
+                             Installing GRUB on /boot/efi
+        -------------------------------------------------------------------------
+        "
+        # Installing GRUB
+        grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt gcry_rijndael gcry_sha256 btrfs" --disable-shim-lock
+        
+        # Creating grub config file.
+        echo "Creating GRUB config file."
+        grub-mkconfig -o /boot/grub/grub.cfg
+        
+        # Adding user with sudo privilege
+        if [ -n "$username" ]; then
+            echo "Adding $username with root privilege."
+            useradd -m $username
+            usermod -aG wheel $username
+            groupadd -r audit
+            gpasswd -a $username audit
+        fi
+        EOF
 
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
@@ -478,69 +521,75 @@ echo -en "$root_password\n$root_password" | passwd
 [ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username", $password
 
 # Giving wheel user sudo access
-sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
+sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
 
 # Change audit logging group
 echo "log_group = audit" >> /etc/audit/auditd.conf
 
 # Enabling audit service
-systemctl enable auditd
+systemctl enable auditd --root=/mnt &>/dev/null
 
 # Enabling auto-trimming service
-systemctl enable fstrim.timer
+systemctl enable fstrim.timer --root=/mnt &>/dev/null
 
 # Enabling NetworkManager
 echo "Enabling NetworkManager"
-systemctl enable NetworkManager
+systemctl enable NetworkManager --root=/mnt &>/dev/null
 
 # Enabling SDDM
 echo "Enabling sddm"
-systemctl enable sddm
+systemctl enable sddm --root=/mnt &>/dev/null
 
 # Enabling AppArmor
 echo "Enabling AppArmor."
-systemctl enable apparmor
+systemctl enable apparmor --root=/mnt &>/dev/null
 
 # Enabling Firewalld
 echo "Enabling Firewalld."
-systemctl enable firewalld
+systemctl enable firewalld --root=/mnt &>/dev/null
 sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
 # Enabling Reflector timer
 echo "Enabling Reflector."
-systemctl enable reflector.timer
+systemctl enable reflector.timer --root=/mnt &>/dev/null
 
 # Enabling systemd-oomd
 echo "Enabling systemd-oomd."
-systemctl enable systemd-oomd
+systemctl enable systemd-oomd --root=/mnt &>/dev/null
 
 # Enabling Snapper automatic snapshots
 echo "Enabling Snapper and automatic snapshots entries."
-systemctl enable snapper-timeline.timer
-systemctl enable snapper-cleanup.timer
-systemctl enable grub-btrfs.path
+systemctl enable snapper-timeline.timer --root=/mnt &>/dev/null
+systemctl enable snapper-cleanup.timer --root=/mnt &>/dev/null
+systemctl enable grub-btrfs.path --root=/mnt &>/dev/null
 
 # Setting umask to 077
-sed -i 's/022/077/g' /etc/profile
-echo "" >> /etc/bash.bashrc
-echo "umask 077" >> /etc/bash.bashrc
+sed -i 's/022/077/g' /mnt//etc/profile
+echo "" >> /mnt/etc/bash.bashrc
+echo "umask 077" >> /mnt/etc/bash.bashrc
 
 # Pacman eye-candy features
 print "Enabling colours and animations in pacman."
 sed -i 's/#Color/Color\nILoveCandy/' /mnt/etc/pacman.conf
 sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /mnt/etc/pacman.conf
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /mnt/etc/pacman.conf
-sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
+sed -i '/\[multilib\]/,/Include/s/^#//' /mnt/etc/pacman.conf
 pacman -Sy --noconfirm
 
-sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /etc/makepkg.conf
+sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /mnt/etc/makepkg.conf
 journalctl --vacuum-size=100M --vacuum-time=2weeks
 
 touch /etc/sysctl.d/99-swappiness.conf
-echo 'vm.swappiness=20' > /etc/sysctl.d/99-swappiness.conf
+echo 'vm.swappiness=20' > /mnt/etc/sysctl.d/99-swappiness.conf
+
+logo
 
 #Install paru
-echo "Paru AUR package helper installation"
+echo -ne "
+-------------------------------------------------------------------------
+                      Installing paru - aur helper
+-------------------------------------------------------------------------
+"
 git clone https://aur.archlinux.org/paru-bin.git
 cd paru-bin/ || exit
 makepkg -sirc
@@ -551,32 +600,45 @@ git clone "https://github.com/ChrisTitusTech/zsh"
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 ln -s "~/zsh/.zshrc" ~/.zshrc
 
-#export PATH=$PATH:~/.local/bin
-#cp -r ~/ArchRaw/dotfiles/* ~/.config/
-#pip install konsave
-#konsave -i ~/ArchRaw/kde.knsv
-#sleep 1
-#konsave -a kde
+logo
 
-#echo -e "Installing CyberRe Grub theme..."
-#THEME_DIR="/boot/grub/themes"
-#THEME_NAME=CyberRe
-#echo -e "Creating the theme directory..."
-#mkdir -p "${THEME_DIR}/${THEME_NAME}"
-#echo -e "Copying the theme..."
-#cd ${HOME}/ArchRaw
-#cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
-#echo -e "Backing up Grub config..."
-#cp -an /etc/default/grub /etc/default/grub.bak
-#echo -e "Setting the theme as the default..."
-#grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
-#echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
-#echo -e "Updating grub..."
-#grub-mkconfig -o /boot/grub/grub.cfg
-#echo -e "All set!"
+# kde configuration
+echo -ne "
+-------------------------------------------------------------------------
+                      kde configuration
+-------------------------------------------------------------------------
+"
+export PATH=$PATH:~/.local/bin
+cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+pip install konsave
+konsave -i ~/archlinux-install-script/kde.knsv
+sleep 1
+konsave -a kde
+
+# Installing CyberRe Grub theme
+echo -ne "
+-------------------------------------------------------------------------
+                      Installing CyberRe Grub theme
+-------------------------------------------------------------------------
+"
+THEME_DIR="/boot/grub/themes"
+THEME_NAME=CyberRe
+echo -e "Creating the theme directory..."
+mkdir -p "${THEME_DIR}/${THEME_NAME}"
+echo -e "Copying the theme..."
+cd ${HOME}/archlinux-install-script
+cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
+echo -e "Backing up Grub config..."
+cp -an /etc/default/grub /etc/default/grub.bak
+echo -e "Setting the theme as the default..."
+grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
+echo -e "Updating grub..."
+grub-mkconfig -o /boot/grub/grub.cfg
+echo -e "All set!"
 
 cd $pwd
 
-# Finishing up
-#echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
-#exit
+Finishing up
+echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
+exit
