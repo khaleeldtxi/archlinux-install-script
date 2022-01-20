@@ -14,13 +14,16 @@ Nvidia
 
 ## Steps
 
-Boot Arch Linux ISO
+Boot Arch Linux ISO  
+
 pacman -Sy git
 
 git clone https://github.com/khaleeldtxi/archlinux-install-script/
 
 cd archlinux-install-script/  
+
 chmod a+x archlinux_raw.sh && sh archlinux_raw.sh
+
 
 Enter the following when asked:
 
