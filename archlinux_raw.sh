@@ -540,6 +540,7 @@ echo "done"
 
 # Giving wheel user sudo access
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
+echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Change audit logging group
 echo "log_group = audit" >> /etc/audit/auditd.conf
@@ -589,7 +590,7 @@ echo "" >> /mnt/etc/bash.bashrc
 echo "umask 077" >> /mnt/etc/bash.bashrc
 
 # Pacman eye-candy features
-print "Enabling colours and animations in pacman."
+echo "Enabling colours and animations in pacman."
 sed -i 's/#Color/Color\nILoveCandy/' /mnt/etc/pacman.conf
 sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /mnt/etc/pacman.conf
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /mnt/etc/pacman.conf
@@ -610,17 +611,19 @@ echo -ne "
                       Installing paru - aur helper
 -------------------------------------------------------------------------
 "
-sudo -u $username mkdir -p /home/$username/.config
+sudo -u $username mkdir -p /mnt/home/$username/.config
 sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
 cd paru-bin/ || exit
 sudo -u $username makepkg --noconfirm -si
 cd "$HOME" || exit
 sudo -u $username paru --noconfirm -Syu
+sed -i '$ d' /mnt/etc/sudoers
 
-touch "~/.cache/zshhistory"
+mkdir -p -p /mnt/home/$username/.cache
+touch "/mnt/home/$username/.cache/zshhistory"
 git clone "https://github.com/ChrisTitusTech/zsh"
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-ln -s "~/zsh/.zshrc" ~/.zshrc
+ln -s "/mnt/home/$username/zsh/.zshrc" /mnt/home/$username/.zshrc
 
 logo
 
@@ -645,7 +648,7 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 export PATH=$PATH:~/.local/bin
-cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+#cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
 pip install konsave
 konsave -i ~/archlinux-install-script/kde.knsv
 sleep 1
@@ -665,10 +668,10 @@ echo -e "Copying the theme..."
 cd ${HOME}/archlinux-install-script
 cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
 echo -e "Backing up Grub config..."
-cp -an /etc/default/grub /etc/default/grub.bak
+cp -an /mnt/etc/default/grub /etc/default/grub.bak
 echo -e "Setting the theme as the default..."
-grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
-echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
+grep "GRUB_THEME=" /mnt//etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /mnt//etc/default/grub
+echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /mnt//etc/default/grub
 echo -e "Updating grub..."
 sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/etc/default/grub
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3/g' >> /mnt/etc/default/grub
