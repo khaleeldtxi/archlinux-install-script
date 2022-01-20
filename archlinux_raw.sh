@@ -181,13 +181,17 @@ echo -ne "
 "
 
 # Selecting the target for the installation.
-PS3="Select the disk where Arch Linux is going to be installed: "
-select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
-do
-    DISK=$ENTRY
-    echo "Installing Arch Linux on $DISK."
-    break
-done
+lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print NR,"/dev/"$2" - "$3}'
+echo -ne "
+------------------------------------------------------------------------
+    THIS WILL FORMAT AND DELETE ALL DATA ON THE DISK             
+    Please make sure you know what you are doing because         
+    after formating your disk there is no way to get data back      
+------------------------------------------------------------------------
+Please enter full path to disk: (example /dev/sda):
+"
+read option
+echo "DISK=$option"
 
 
 # disk prep
