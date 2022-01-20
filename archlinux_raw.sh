@@ -336,9 +336,9 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip --noconfirm --needed
 
-#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db --noconfirm --needed
+#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db wireplumber --noconfirm --needed
 
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
@@ -650,7 +650,9 @@ echo -e "Setting the theme as the default..."
 grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
 echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
 echo -e "Updating grub..."
-grub-mkconfig -o /boot/grub/grub.cfg
+sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/etc/default/grub
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3/g' >> /mnt/etc/default/grub
+grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
 
 cd $pwd
