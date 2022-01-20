@@ -503,9 +503,14 @@ arch-chroot /mnt /bin/bash -e <<EOF
     groupadd -r audit
     gpasswd -a $username audit
 
+    echo -ne "
+    -------------------------------------------------------------------------
+                        Setting root & user password
+    -------------------------------------------------------------------------
+    "
+
     # Setting root & user password
-    echo "Setting root password."
-    
+        
     passwd
     $root_password
     $root_password
@@ -514,7 +519,12 @@ arch-chroot /mnt /bin/bash -e <<EOF
     $password
     $password
 
-echo "done"
+    # Giving wheel user sudo access
+    useradd -m -G wheel -s /bin/bash $username 
+    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' EDITOR=nano /etc/sudoers
+    echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+    echo "Done"
     
 EOF
 
@@ -541,10 +551,6 @@ EOF
 
 chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
 arch-chroot /mnt chown -R $username:$username /mnt/home/${username}/.config
-
-# Giving wheel user sudo access
-sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
-echo "$username ALL=(ALL) NOPASSWD: ALL" >> /mnt/etc/sudoers
 
 # Change audit logging group
 echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
@@ -615,7 +621,6 @@ echo -ne "
                       Installing paru - aur helper
 -------------------------------------------------------------------------
 "
-sudo -u $username mkdir -p /mnt/home/$username/.config
 sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
 cd paru-bin/ || exit
 sudo -u $username makepkg --noconfirm -si
