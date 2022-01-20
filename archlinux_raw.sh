@@ -54,6 +54,8 @@ echo -ne "
 reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 pacman -Syy
 
+clear
+
 userinfo () {
 # Enter username
 read -p "Please enter your username: " username
@@ -302,7 +304,11 @@ chmod 600 /mnt/@/.snapshots/1/info.xml
 
 # Mounting the newly created subvolumes
 umount /mnt
-echo "Mounting the newly created subvolumes."
+echo -ne "
+-------------------------------------------------------------------------
+                Mounting the newly created subvolumes
+-------------------------------------------------------------------------
+"
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $BTRFS /mnt
 mkdir -p /mnt/{boot,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines}
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot $BTRFS /mnt/boot
@@ -464,8 +470,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Generating locales."
     locale-gen &>/dev/null
           
-    logo
-
     echo -ne "
     -------------------------------------------------------------------------
                          Installing GRUB on /boot/efi
