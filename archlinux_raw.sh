@@ -188,9 +188,8 @@ echo -ne "
     Please make sure you know what you are doing because         
     after formating your disk there is no way to get data back      
 ------------------------------------------------------------------------
-Please enter full path to disk: (example /dev/sda):
 "
-read -p "You selected: " DISK
+read -p "Please enter full path to disk: (example /dev/sda or /dev/nvme0n1 or /dev/vda): " DISK
 
 
 # disk prep
