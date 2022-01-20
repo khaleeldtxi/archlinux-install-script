@@ -526,167 +526,168 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Done"
     
+    # Enable AppArmor notifications
+    # Must create ~/.config/autostart first
+
+    echo -ne "
+    -------------------------------------------------------------------------
+                         Enable AppArmor notifications
+    -------------------------------------------------------------------------
+    "
+
+    mkdir -p -m 700 /home/${username}/.config/autostart/
+    bash -c "cat > /home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+    [Desktop Entry]
+    Type=Application
+    Name=AppArmor Notify
+    Comment=Receive on screen notifications of AppArmor denials
+    TryExec=aa-notify
+    Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
+    StartupNotify=false
+    NoDisplay=true
+    EOF
+
+    chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop
+    arch-chroot /mnt chown -R $username:$username /home/${username}/.config
+
+    # Change audit logging group
+    echo "log_group = audit" >> /etc/audit/auditd.conf
+
+    # Enabling audit service
+    systemctl enable auditd &>/dev/null
+
+    # Enabling auto-trimming service
+    systemctl enable fstrim.timer &>/dev/null
+
+    # Enabling NetworkManager
+    echo "Enabling NetworkManager"
+    systemctl enable NetworkManager &>/dev/null
+
+    # Enabling SDDM
+    echo "Enabling sddm"
+    systemctl enable sddm &>/dev/null
+
+    # Enabling AppArmor
+    echo "Enabling AppArmor."
+    systemctl enable apparmor &>/dev/null
+    systemctl enable auditd.service &>/dev/null
+    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
+
+    # Enabling Firewalld
+    echo "Enabling Firewalld."
+    systemctl enable firewalld  &>/dev/null
+    sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
+
+    # Enabling Reflector timer
+    echo "Enabling Reflector."
+    systemctl enable reflector.timer &>/dev/null
+
+    # Enabling systemd-oomd
+    echo "Enabling systemd-oomd."
+    systemctl enable systemd-oomd &>/dev/null
+
+    # Enabling Snapper automatic snapshots
+    echo "Enabling Snapper and automatic snapshots entries."
+    systemctl enable snapper-timeline.timer &>/dev/null
+    systemctl enable snapper-cleanup.timer &>/dev/null
+    systemctl enable grub-btrfs.path &>/dev/null
+
+    # Setting umask to 077
+    sed -i 's/022/077/g' /etc/profile
+    echo "" >> /etc/bash.bashrc
+    echo "umask 077" >> /etc/bash.bashrc
+
+    # Pacman eye-candy features
+    echo "Enabling colours and animations in pacman."
+    sed -i 's/#Color/Color\nILoveCandy/' /etc/pacman.conf
+    sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
+    sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
+    sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
+    pacman -Sy --noconfirm
+
+    sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /etc/makepkg.conf
+    journalctl --vacuum-size=100M --vacuum-time=2weeks
+
+    touch /etc/sysctl.d/99-swappiness.conf
+    echo 'vm.swappiness=20' > /etc/sysctl.d/99-swappiness.conf
+
+    logo
+
+    #Install paru
+    echo -ne "
+    -------------------------------------------------------------------------
+                          Installing paru - aur helper
+    -------------------------------------------------------------------------
+    "
+    cd /home/#username/
+    sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
+    cd paru-bin/ || exit
+    sudo -u $username makepkg --noconfirm -si
+    cd "$HOME" || exit
+    sudo -u $username paru --noconfirm -Syu
+    sed -i '$ d' /etc/sudoers
+
+    cd /home/#username/
+    mkdir -p /home/$username/.cache
+    touch "/home/$username/.cache/zshhistory"
+    git clone "https://github.com/ChrisTitusTech/zsh"
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+    ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
+
+    logo
+
+    echo "Set shutdown timeout"
+    sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
+
+    if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
+        echo -e "Intel CPU was detected -> add intel_iommu=on"
+        sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="intel_iommu=on /g' /etc/default/grub
+    elif lscpu -J | grep -q "AMD" >/dev/null 2>&1; then
+        echo -e "AMD CPU was detected -> add amd_iommu=on"
+        sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="amd_iommu=on /g' /etc/default/grub
+    fi
+
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg
+
+    # Installing CyberRe Grub theme
+    echo -ne "
+    -------------------------------------------------------------------------
+                          Installing CyberRe Grub theme
+    -------------------------------------------------------------------------
+    "
+    THEME_DIR="/boot/grub/themes"
+    THEME_NAME=CyberRe
+    echo -e "Creating the theme directory..."
+    mkdir -p "${THEME_DIR}/${THEME_NAME}"
+    echo -e "Copying the theme..."
+    cd ${HOME}/archlinux-install-script
+    cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
+    echo -e "Backing up Grub config..."
+    cp -an /etc/default/grub /etc/default/grub.bak
+    echo -e "Setting the theme as the default..."
+    grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+    echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
+    echo -e "Updating grub..."
+    sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /etc/default/grub
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3/g' >> /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg
+    echo -e "All set!"
+
+    # kde configuration
+    echo -ne "
+    -------------------------------------------------------------------------
+                          kde configuration
+    -------------------------------------------------------------------------
+    "
+    export PATH=$PATH:~/.local/bin
+    #cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+    pip install konsave
+    konsave -i ~/archlinux-install-script/kde.knsv
+    sleep 1
+    konsave -a kde
+
 EOF
-
-# Enable AppArmor notifications
-# Must create ~/.config/autostart first
-
-echo -ne "
--------------------------------------------------------------------------
-                     Enable AppArmor notifications
--------------------------------------------------------------------------
-"
-
-mkdir -p -m 700 /mnt/home/${username}/.config/autostart/
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
-[Desktop Entry]
-Type=Application
-Name=AppArmor Notify
-Comment=Receive on screen notifications of AppArmor denials
-TryExec=aa-notify
-Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
-StartupNotify=false
-NoDisplay=true
-EOF
-
-chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
-arch-chroot /mnt chown -R $username:$username /mnt/home/${username}/.config
-
-# Change audit logging group
-echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
-
-# Enabling audit service
-systemctl enable auditd --root=/mnt &>/dev/null
-
-# Enabling auto-trimming service
-systemctl enable fstrim.timer --root=/mnt &>/dev/null
-
-# Enabling NetworkManager
-echo "Enabling NetworkManager"
-systemctl enable NetworkManager --root=/mnt &>/dev/null
-
-# Enabling SDDM
-echo "Enabling sddm"
-systemctl enable sddm --root=/mnt &>/dev/null
-
-# Enabling AppArmor
-echo "Enabling AppArmor."
-systemctl enable apparmor --root=/mnt &>/dev/null
-systemctl enable auditd.service --root=/mnt &>/dev/null
-sed -i 's/^log_group = root/log_group = audit/g' /mnt/etc/audit/auditd.conf
-
-# Enabling Firewalld
-echo "Enabling Firewalld."
-systemctl enable firewalld --root=/mnt &>/dev/null
-sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
-
-# Enabling Reflector timer
-echo "Enabling Reflector."
-systemctl enable reflector.timer --root=/mnt &>/dev/null
-
-# Enabling systemd-oomd
-echo "Enabling systemd-oomd."
-systemctl enable systemd-oomd --root=/mnt &>/dev/null
-
-# Enabling Snapper automatic snapshots
-echo "Enabling Snapper and automatic snapshots entries."
-systemctl enable snapper-timeline.timer --root=/mnt &>/dev/null
-systemctl enable snapper-cleanup.timer --root=/mnt &>/dev/null
-systemctl enable grub-btrfs.path --root=/mnt &>/dev/null
-
-# Setting umask to 077
-sed -i 's/022/077/g' /mnt/etc/profile
-echo "" >> /mnt/etc/bash.bashrc
-echo "umask 077" >> /mnt/etc/bash.bashrc
-
-# Pacman eye-candy features
-echo "Enabling colours and animations in pacman."
-sed -i 's/#Color/Color\nILoveCandy/' /mnt/etc/pacman.conf
-sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /mnt/etc/pacman.conf
-sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /mnt/etc/pacman.conf
-sed -i '/\[multilib\]/,/Include/s/^#//' /mnt/etc/pacman.conf
-pacman -Sy --noconfirm
-
-sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /mnt/etc/makepkg.conf
-journalctl --vacuum-size=100M --vacuum-time=2weeks
-
-touch /etc/sysctl.d/99-swappiness.conf
-echo 'vm.swappiness=20' > /mnt/etc/sysctl.d/99-swappiness.conf
-
-logo
-
-#Install paru
-echo -ne "
--------------------------------------------------------------------------
-                      Installing paru - aur helper
--------------------------------------------------------------------------
-"
-sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
-cd paru-bin/ || exit
-sudo -u $username makepkg --noconfirm -si
-cd "$HOME" || exit
-sudo -u $username paru --noconfirm -Syu
-sed -i '$ d' /mnt/etc/sudoers
-
-mkdir -p -p /mnt/home/$username/.cache
-touch "/mnt/home/$username/.cache/zshhistory"
-git clone "https://github.com/ChrisTitusTech/zsh"
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-ln -s "/mnt/home/$username/zsh/.zshrc" /mnt/home/$username/.zshrc
-
-logo
-
-echo "Set shutdown timeout"
-sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /mnt/etc/systemd/system.conf
-
-if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
-    echo -e "Intel CPU was detected -> add intel_iommu=on"
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="intel_iommu=on /g' /mnt/etc/default/grub
-elif lscpu -J | grep -q "AMD" >/dev/null 2>&1; then
-    echo -e "AMD CPU was detected -> add amd_iommu=on"
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="amd_iommu=on /g' /mnt/etc/default/grub
-fi
-
-sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /mnt/etc/default/grub
-grub-mkconfig -o /mnt/boot/grub/grub.cfg
-
-# Installing CyberRe Grub theme
-echo -ne "
--------------------------------------------------------------------------
-                      Installing CyberRe Grub theme
--------------------------------------------------------------------------
-"
-THEME_DIR="/boot/grub/themes"
-THEME_NAME=CyberRe
-echo -e "Creating the theme directory..."
-mkdir -p "${THEME_DIR}/${THEME_NAME}"
-echo -e "Copying the theme..."
-cd ${HOME}/archlinux-install-script
-cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
-echo -e "Backing up Grub config..."
-cp -an /mnt/etc/default/grub /mnt/etc/default/grub.bak
-echo -e "Setting the theme as the default..."
-grep "GRUB_THEME=" /mnt/etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /mnt/etc/default/grub
-echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /mnt//etc/default/grub
-echo -e "Updating grub..."
-sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/etc/default/grub
-sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3/g' >> /mnt/etc/default/grub
-grub-mkconfig -o /mnt/boot/grub/grub.cfg
-echo -e "All set!"
-
-# kde configuration
-echo -ne "
--------------------------------------------------------------------------
-                      kde configuration
--------------------------------------------------------------------------
-"
-export PATH=$PATH:~/.local/bin
-#cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
-pip install konsave
-konsave -i ~/archlinux-install-script/kde.knsv
-sleep 1
-konsave -a kde
-
 
 cd $pwd
 
