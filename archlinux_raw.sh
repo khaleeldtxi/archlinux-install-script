@@ -336,7 +336,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs zsh zsh-completions snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools --noconfirm --needed
 
 #pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db wireplumber --noconfirm --needed
 
@@ -508,19 +508,12 @@ arch-chroot /mnt /bin/bash -e <<EOF
                         Setting root & user password
     -------------------------------------------------------------------------
     "
-
-    # Setting root & user password
-        
-    passwd
-    $root_password
-    $root_password
-
-    passwd $username
-    $password
-    $password
-
+    
     # Giving wheel user sudo access
+    echo -e "$rootPassword\n$rootPassword" | passwd root
+    usermod -aG wheel root
     useradd -m -G wheel -s /bin/bash $username 
+    echo -e "$password\n$password" | passwd $username
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
@@ -597,8 +590,13 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "" >> /etc/bash.bashrc
     echo "umask 077" >> /etc/bash.bashrc
 
+    echo -ne "
+    -------------------------------------------------------------------------
+                         Installing Pacman eye-candy features
+    -------------------------------------------------------------------------
+    "
+
     # Pacman eye-candy features
-    echo "Enabling colours and animations in pacman."
     sed -i 's/#Color/Color\nILoveCandy/' /etc/pacman.conf
     sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
     sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
@@ -611,33 +609,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
     touch /etc/sysctl.d/99-swappiness.conf
     echo 'vm.swappiness=20' > /etc/sysctl.d/99-swappiness.conf
 
-    logo
-
-    #Install paru
-    echo -ne "
-    -------------------------------------------------------------------------
-                          Installing paru - aur helper
-    -------------------------------------------------------------------------
-    "
-    cd /home/#username/
-    sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
-    cd paru-bin/ || exit
-    sudo -u $username makepkg --noconfirm -si
-    cd "$HOME" || exit
-    sudo -u $username paru --noconfirm -Syu
-    sed -i '$ d' /etc/sudoers
-
-    cd /home/#username/
-    mkdir -p /home/$username/.cache
-    touch "/home/$username/.cache/zshhistory"
-    git clone "https://github.com/ChrisTitusTech/zsh"
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-    ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
-
-    logo
-
     echo "Set shutdown timeout"
     sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
+
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /etc/default/grub
 
     if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
         echo -e "Intel CPU was detected -> add intel_iommu=on"
@@ -647,7 +622,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
         sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="amd_iommu=on /g' /etc/default/grub
     fi
 
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /etc/default/grub
     grub-mkconfig -o /boot/grub/grub.cfg
 
     # Installing CyberRe Grub theme
@@ -674,6 +648,19 @@ arch-chroot /mnt /bin/bash -e <<EOF
     grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "All set!"
 
+    echo -ne "
+    -------------------------------------------------------------------------
+                            zsh configuration
+    -------------------------------------------------------------------------
+    "
+
+    cd /home/$username/
+    mkdir -p /home/$username/.cache
+    touch "/home/$username/.cache/zshhistory"
+    sudo -u $username git clone "https://github.com/ChrisTitusTech/zsh"
+    sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+    ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
+
     # kde configuration
     echo -ne "
     -------------------------------------------------------------------------
@@ -687,10 +674,26 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sleep 1
     konsave -a kde
 
+    #Install paru
+    echo -ne "
+    -------------------------------------------------------------------------
+                          Installing paru - aur helper
+    -------------------------------------------------------------------------
+    "
+    cd /home/$username/
+    sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
+    cd paru-bin/ || exit
+    sudo -u $username makepkg --noconfirm -si
+    cd "$HOME" || exit
+    sudo -u $username paru --noconfirm -Syu
+    sed -i '$ d' /etc/sudoers
+
+    
+    
 EOF
 
 cd $pwd
 
-Finishing up
+#Finishing up
 echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
 exit
