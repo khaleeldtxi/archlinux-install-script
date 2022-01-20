@@ -645,19 +645,6 @@ fi
 sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /mnt/etc/default/grub
 grub-mkconfig -o /mnt/boot/grub/grub.cfg
 
-# kde configuration
-echo -ne "
--------------------------------------------------------------------------
-                      kde configuration
--------------------------------------------------------------------------
-"
-export PATH=$PATH:~/.local/bin
-#cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
-pip install konsave
-konsave -i ~/archlinux-install-script/kde.knsv
-sleep 1
-konsave -a kde
-
 # Installing CyberRe Grub theme
 echo -ne "
 -------------------------------------------------------------------------
@@ -681,6 +668,20 @@ sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3/g' >> /mnt/etc/default/grub
 grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
+
+# kde configuration
+echo -ne "
+-------------------------------------------------------------------------
+                      kde configuration
+-------------------------------------------------------------------------
+"
+export PATH=$PATH:~/.local/bin
+#cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+pip install konsave
+konsave -i ~/archlinux-install-script/kde.knsv
+sleep 1
+konsave -a kde
+
 
 cd $pwd
 
