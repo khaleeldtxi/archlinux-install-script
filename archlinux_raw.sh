@@ -540,10 +540,10 @@ echo "done"
 
 # Giving wheel user sudo access
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
-echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "$username ALL=(ALL) NOPASSWD: ALL" >> /mnt/etc/sudoers
 
 # Change audit logging group
-echo "log_group = audit" >> /etc/audit/auditd.conf
+echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
 
 # Enabling audit service
 systemctl enable auditd --root=/mnt &>/dev/null
@@ -585,7 +585,7 @@ systemctl enable snapper-cleanup.timer --root=/mnt &>/dev/null
 systemctl enable grub-btrfs.path --root=/mnt &>/dev/null
 
 # Setting umask to 077
-sed -i 's/022/077/g' /mnt//etc/profile
+sed -i 's/022/077/g' /mnt/etc/profile
 echo "" >> /mnt/etc/bash.bashrc
 echo "umask 077" >> /mnt/etc/bash.bashrc
 
@@ -668,9 +668,9 @@ echo -e "Copying the theme..."
 cd ${HOME}/archlinux-install-script
 cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
 echo -e "Backing up Grub config..."
-cp -an /mnt/etc/default/grub /etc/default/grub.bak
+cp -an /mnt/etc/default/grub /mnt/etc/default/grub.bak
 echo -e "Setting the theme as the default..."
-grep "GRUB_THEME=" /mnt//etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /mnt//etc/default/grub
+grep "GRUB_THEME=" /mnt/etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /mnt/etc/default/grub
 echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /mnt//etc/default/grub
 echo -e "Updating grub..."
 sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/etc/default/grub
