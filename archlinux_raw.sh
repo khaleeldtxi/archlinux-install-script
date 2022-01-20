@@ -40,7 +40,7 @@ timedatectl set-ntp true &>/dev/null
 # Setting up mirrors for optimal download
 
 sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-pacman -S --noconfirm curl pacman-contrib terminus-font reflector rsync grub gptfdisk btrfs-progs
+pacman -S --noconfirm curl pacman-contrib terminus-font reflector
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 
 iso=$(curl -4 ifconfig.co/country-iso)
@@ -200,8 +200,8 @@ if [[ "$response" =~ ^(yes|y)$ ]]; then
                                 Formating Disk
     -------------------------------------------------------------------------
     "
-    wipefs -af "$DISK" &>/dev/null
-    sgdisk -Zo "$DISK" &>/dev/null
+    wipefs -af $DISK &>/dev/null
+    sgdisk -Zo $DISK &>/dev/null
     
     # create partitions
     sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
@@ -226,6 +226,7 @@ echo -ne "
                           Creating Filesystems
 -------------------------------------------------------------------------
 "
+partprobe "$DISK"
 
 if [[ "${DISK}" =~ "nvme" ]]; then
     ESP=${DISK}p1
@@ -237,11 +238,11 @@ fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
-mkfs.fat -F 32 -n "ESP" $ESP
+mkfs.fat -F 32 $ESP &>/dev/null
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
-mkfs.btrfs -L ARCH-ROOT -f -n 32k $BTRFS
+mkfs.btrfs -L ARCH-ROOT -f -n 32k $BTRFS &>/dev/null
 mount -t btrfs $BTRFS /mnt
 
 # Creating BTRFS subvolumes
