@@ -509,8 +509,15 @@ EOF
 
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
+
+echo -ne "
+-------------------------------------------------------------------------
+                     Enable AppArmor notifications
+-------------------------------------------------------------------------
+"
+
 mkdir -p -m 700 /mnt/home/${username}/.config/autostart/
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop"
+bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
 [Desktop Entry]
 Type=Application
 Name=AppArmor Notify
@@ -525,8 +532,9 @@ chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
 arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
 # Setting root & user password
-echo -en "$root_password\n$root_password" | passwd
-[ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username", $password
+echo "Setting root password."
+arch-chroot /mnt /bin/passwd
+[ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username"
 
 # Giving wheel user sudo access
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
