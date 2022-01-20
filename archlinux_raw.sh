@@ -237,7 +237,7 @@ fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
-mkfs.fat -F 32 -n "ESP" "${ESP}"
+mkfs.fat -F 32 -n "ESP" "$ESP"
 
 # Formatting the partition as BTRFS
 echo "Formatting the Root partition as BTRFS."
