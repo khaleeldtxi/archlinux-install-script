@@ -336,7 +336,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools --noconfirm --needed
 
 #pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db wireplumber --noconfirm --needed
 
@@ -534,7 +534,9 @@ arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 # Setting root & user password
 echo "Setting root password."
 arch-chroot /mnt /bin/passwd
-[ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username"
+echo -e "${username}:${password}" | chpasswd
+echo -e "root:${root_password}" | chpasswd
+echo "done"
 
 # Giving wheel user sudo access
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
@@ -559,6 +561,8 @@ systemctl enable sddm --root=/mnt &>/dev/null
 # Enabling AppArmor
 echo "Enabling AppArmor."
 systemctl enable apparmor --root=/mnt &>/dev/null
+systemctl enable auditd.service --root=/mnt &>/dev/null
+sed -i 's/^log_group = root/log_group = audit/g' /mnt/etc/audit/auditd.conf
 
 # Enabling Firewalld
 echo "Enabling Firewalld."
@@ -606,10 +610,12 @@ echo -ne "
                       Installing paru - aur helper
 -------------------------------------------------------------------------
 "
-git clone https://aur.archlinux.org/paru-bin.git
+sudo -u $username mkdir -p /home/$username/.config
+sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
 cd paru-bin/ || exit
-makepkg -sirc
+sudo -u $username makepkg --noconfirm -si
 cd "$HOME" || exit
+sudo -u $username paru --noconfirm -Syu
 
 touch "~/.cache/zshhistory"
 git clone "https://github.com/ChrisTitusTech/zsh"
@@ -617,6 +623,20 @@ git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 ln -s "~/zsh/.zshrc" ~/.zshrc
 
 logo
+
+echo "Set shutdown timeout"
+sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /mnt/etc/systemd/system.conf
+
+if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
+    echo -e "Intel CPU was detected -> add intel_iommu=on"
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="intel_iommu=on /g' /mnt/etc/default/grub
+elif lscpu -J | grep -q "AMD" >/dev/null 2>&1; then
+    echo -e "AMD CPU was detected -> add amd_iommu=on"
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="amd_iommu=on /g' /mnt/etc/default/grub
+fi
+
+sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /mnt/etc/default/grub
+grub-mkconfig -o /mnt/boot/grub/grub.cfg
 
 # kde configuration
 echo -ne "
