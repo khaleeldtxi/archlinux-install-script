@@ -497,14 +497,25 @@ arch-chroot /mnt /bin/bash -e <<EOF
     mount -a
     chmod 750 /.snapshots
 
-    # Adding user with sudo privilege
-    if [ -n "$username" ]; then
-        echo "Adding $username with root privilege."
-        useradd -m $username
-        usermod -aG wheel $username
-        groupadd -r audit
-        gpasswd -a $username audit
-    fi
+    echo "Adding $username with root privilege."
+    useradd -m $username
+    usermod -aG wheel $username
+    groupadd -r audit
+    gpasswd -a $username audit
+
+    # Setting root & user password
+    echo "Setting root password."
+    
+    passwd
+    $root_password
+    $root_password
+
+    passwd $username
+    $password
+    $password
+
+echo "done"
+    
 EOF
 
 # Enable AppArmor notifications
@@ -529,14 +540,7 @@ NoDisplay=true
 EOF
 
 chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
-arch-chroot /mnt chown -R $username:$username /home/${username}/.config
-
-# Setting root & user password
-echo "Setting root password."
-arch-chroot /mnt /bin/passwd
-echo -e "${username}:${password}" | chpasswd
-echo -e "root:${root_password}" | chpasswd
-echo "done"
+arch-chroot /mnt chown -R $username:$username /mnt/home/${username}/.config
 
 # Giving wheel user sudo access
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
