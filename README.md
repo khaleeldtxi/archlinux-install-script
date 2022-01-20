@@ -15,10 +15,12 @@ Nvidia
 ## Steps
 
 Boot Arch Linux ISO
+pacman -Sy git
 
-curl https://github.com/khaleeldtxi/archlinux-install-script/archlinux-install-script.sh -o archlinux-install-script.sh
+git clone https://github.com/khaleeldtxi/archlinux-install-script/
 
-sh archlinux-install-script.sh
+cd archlinux-install-script/
+chmod a+x archlinux_raw.sh && sh archlinux_raw.sh
 
 Enter the following when asked:
 
@@ -26,4 +28,5 @@ Enter the following when asked:
 *Host\
 *Select Kernel (Stable, Hardened, LTS, Zen)\
 *Select Disk (example /dev/sda or /dev/nvmeon1) - EFI & Root parition will be created\
-*Locale (in format en_US)
+*Locale (in format en_US)  
+*Keymap
