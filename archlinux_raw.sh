@@ -190,8 +190,7 @@ echo -ne "
 ------------------------------------------------------------------------
 Please enter full path to disk: (example /dev/sda):
 "
-read option
-echo "DISK=$option"
+read -p "You selected: " DISK
 
 
 # disk prep
