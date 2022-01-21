@@ -538,7 +538,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Enabling Firewalld
     echo "Enabling Firewalld."
     systemctl enable --now firewalld  &>/dev/null
-    sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
+
+    # Run following command after installing kdeconnect
+    #sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
     # Enabling Reflector timer
     echo "Enabling Reflector."
@@ -555,6 +557,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     systemctl enable grub-btrfs.path &>/dev/null
 
     # Setting umask to 077
+    echo "Setting umask to 077"
     sed -i 's/022/077/g' /etc/profile
     echo "" >> /etc/bash.bashrc
     echo "umask 077" >> /etc/bash.bashrc
@@ -580,8 +583,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Set shutdown timeout"
     sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
-
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 /g' /etc/default/grub
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 loglevel=3/g' /etc/default/grub
 
     if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
         echo -e "Intel CPU was detected -> add intel_iommu=on"
@@ -613,8 +615,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
     echo -e "Updating grub..."
     sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /etc/default/grub
-    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3/g' >> /etc/default/grub
-    grub-mkconfig -o /boot/grub/grub.cfg
+        grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "All set!"
 
     echo -ne "
@@ -631,17 +632,17 @@ arch-chroot /mnt /bin/bash -e <<EOF
     ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
 
     # kde configuration
-    echo -ne "
-    -------------------------------------------------------------------------
-                          kde configuration
-    -------------------------------------------------------------------------
-    "
-    export PATH=$PATH:~/.local/bin
-    #cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
-    pip install konsave
-    konsave -i ~/archlinux-install-script/kde.knsv
-    sleep 1
-    konsave -a kde
+    #echo -ne "
+    #-------------------------------------------------------------------------
+    #                      kde configuration
+    #-------------------------------------------------------------------------
+    #"
+    #export PATH=$PATH:~/.local/bin
+    ##cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+    #pip install konsave
+    #konsave -i ~/archlinux-install-script/kde.knsv
+    #sleep 1
+    #konsave -a kde
 
     #Install paru
     echo -ne "
