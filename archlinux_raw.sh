@@ -536,31 +536,27 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
 
     # Enabling Firewalld
-    echo "Enabling Firewalld."
-    systemctl enable --now firewalld  &>/dev/null
+    systemctl enable firewalld  &>/dev/null
+    echo "Enabled Firewalld."
 
     # Run following command after installing kdeconnect
     #sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
-    # Enabling Reflector timer
-    echo "Enabling Reflector."
-    systemctl enable reflector.timer &>/dev/null
-
     # Enabling systemd-oomd
-    echo "Enabling systemd-oomd."
     systemctl enable systemd-oomd &>/dev/null
+    echo "Enabled systemd-oomd."
 
-    # Enabling Snapper automatic snapshots
-    echo "Enabling Snapper and automatic snapshots entries."
+    # Enabling Snapper automatic snapshots    
     systemctl enable snapper-timeline.timer &>/dev/null
     systemctl enable snapper-cleanup.timer &>/dev/null
     systemctl enable grub-btrfs.path &>/dev/null
+    echo "Enabled Snapper and automatic snapshots entries."
 
     # Setting umask to 077
-    echo "Setting umask to 077"
     sed -i 's/022/077/g' /etc/profile
     echo "" >> /etc/bash.bashrc
     echo "umask 077" >> /etc/bash.bashrc
+    echo "Setting umask to 077 - Done"
 
     echo -ne "
     -------------------------------------------------------------------------
@@ -574,6 +570,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
     sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
     pacman -Sy --noconfirm
+    echo "Pacman eye-candy features installed."
 
     sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /etc/makepkg.conf
     journalctl --vacuum-size=100M --vacuum-time=2weeks
@@ -617,6 +614,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /etc/default/grub
         grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "All set!"
+    echo "CyberRe Grub theme installed."
 
     echo -ne "
     -------------------------------------------------------------------------
@@ -630,6 +628,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sudo -u $username git clone "https://github.com/ChrisTitusTech/zsh"
     sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
     ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
+    echo "zsh configured."
 
     # kde configuration
     #echo -ne "
@@ -657,8 +656,11 @@ arch-chroot /mnt /bin/bash -e <<EOF
     cd "$HOME" || exit
     sudo -u $username paru --noconfirm -Syu
     sed -i '$ d' /etc/sudoers
+    echo "paru installed."
 
-    
+    # Enabling Reflector timer
+    systemctl enable reflector.timer &>/dev/null
+    echo "Enabled Reflector."
     
 EOF
 
