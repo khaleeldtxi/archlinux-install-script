@@ -369,7 +369,6 @@ echo "Configuring /etc/mkinitcpio for ZSTD compression."
 sed -i 's,#COMPRESSION="zstd",COMPRESSION="zstd",g' /mnt/etc/mkinitcpio.conf
 
 echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
-echo -e 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' >> /mnt/etc/default/grub
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
 
@@ -662,7 +661,7 @@ NoDisplay=true
 EOF
 
 chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
-arch-chroot /mnt chown -R $username:$username /mnt/home/${username}/.config
+#chown -R $username:$username /mnt/home/${username}/.config
 
 # Change audit logging group
 echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
@@ -688,7 +687,8 @@ echo -e "Updating grub..."
 sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/etc/default/grub
 grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
-echo "CyberRe Grub theme installed.
+echo "CyberRe Grub theme installed."
+
 
 cd $pwd
 
