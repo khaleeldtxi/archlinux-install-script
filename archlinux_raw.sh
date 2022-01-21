@@ -369,6 +369,7 @@ echo "Configuring /etc/mkinitcpio for ZSTD compression."
 sed -i 's,#COMPRESSION="zstd",COMPRESSION="zstd",g' /mnt/etc/mkinitcpio.conf
 
 echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
+echo -e "s/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g" >> /mnt/etc/default/grub
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
 
@@ -580,7 +581,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Set shutdown timeout"
     sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock,lockdown,yama,apparmor,bpf audit=1 loglevel=3/g' /etc/default/grub
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1 loglevel=3/g' /etc/default/grub
 
     if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
         echo -e "Intel CPU was detected -> add intel_iommu=on"
@@ -592,30 +593,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     grub-mkconfig -o /boot/grub/grub.cfg
 
-    # Installing CyberRe Grub theme
-    echo -ne "
-    -------------------------------------------------------------------------
-                          Installing CyberRe Grub theme
-    -------------------------------------------------------------------------
-    "
-    THEME_DIR="/boot/grub/themes"
-    THEME_NAME=CyberRe
-    echo -e "Creating the theme directory..."
-    mkdir -p "${THEME_DIR}/${THEME_NAME}"
-    echo -e "Copying the theme..."
-    cd ${HOME}/archlinux-install-script
-    cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
-    echo -e "Backing up Grub config..."
-    cp -an /etc/default/grub /etc/default/grub.bak
-    echo -e "Setting the theme as the default..."
-    grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
-    echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
-    echo -e "Updating grub..."
-    sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /etc/default/grub
-        grub-mkconfig -o /boot/grub/grub.cfg
-    echo -e "All set!"
-    echo "CyberRe Grub theme installed."
-
+    
     echo -ne "
     -------------------------------------------------------------------------
                             zsh configuration
@@ -661,7 +639,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Enabling Reflector timer
     systemctl enable reflector.timer &>/dev/null
     echo "Enabled Reflector."
-    
+
 EOF
 
 # Enable AppArmor notifications
@@ -688,6 +666,29 @@ arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
 # Change audit logging group
 echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
+
+# Installing CyberRe Grub theme
+echo -ne "
+-------------------------------------------------------------------------
+                      Installing CyberRe Grub theme
+-------------------------------------------------------------------------
+"
+THEME_DIR=/mnt/boot/grub/themes
+THEME_NAME=CyberRe
+echo -e "Creating the theme directory..."
+mkdir -p ${THEME_DIR}/${THEME_NAME}
+echo -e "Copying the theme..."
+cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
+echo -e "Backing up Grub config..."
+cp -an /etc/default/grub /etc/default/grub.bak
+echo -e "Setting the theme as the default..."
+grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
+echo -e "Updating grub..."
+sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg
+echo -e "All set!"
+echo "CyberRe Grub theme installed.
 
 cd $pwd
 
