@@ -537,7 +537,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Enabling Firewalld
     echo "Enabling Firewalld."
-    systemctl enable firewalld  &>/dev/null
+    systemctl enable --now firewalld  &>/dev/null
     sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
     # Enabling Reflector timer
@@ -668,8 +668,8 @@ echo -ne "
                      Enable AppArmor notifications
 -------------------------------------------------------------------------
 "
-mkdir -p -m 700 /mnt//home/${username}/.config/autostart/
-bash -c "cat > /mnt//home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+mkdir -p -m 700 /mnt/home/${username}/.config/autostart/
+bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
 [Desktop Entry]
 Type=Application
 Name=AppArmor Notify
