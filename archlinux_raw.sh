@@ -510,7 +510,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     "
     
     # Giving wheel user sudo access
-    echo -e "$rootPassword\n$rootPassword" | passwd root
+    echo -e "$root_password\n$root_password" | passwd root
     usermod -aG wheel root
     useradd -m -G wheel -s /bin/bash $username 
     echo -e "$password\n$password" | passwd $username
