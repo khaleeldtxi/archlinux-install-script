@@ -603,7 +603,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     mkdir -p /home/$username/.cache
     touch "/home/$username/.cache/zshhistory"
     sudo -u $username git clone "https://github.com/ChrisTitusTech/zsh"
-    sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+    sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/$username/powerlevel10k
     ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
     echo "zsh configured."
 
@@ -684,7 +684,7 @@ echo -e "Setting the theme as the default..."
 grep "GRUB_THEME=" /mnt/etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /mnt/etc/default/grub
 echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /mnt/etc/default/grub
 echo -e "Updating grub..."
-sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/g' >> /mnt/etc/default/grub
+sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
 grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
 echo "CyberRe Grub theme installed."
