@@ -534,7 +534,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
     StartupNotify=false
     NoDisplay=true
-    EOF
+    'EOF'
 
     chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop
     arch-chroot /mnt chown -R $username:$username /home/${username}/.config
