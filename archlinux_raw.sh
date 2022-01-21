@@ -672,12 +672,12 @@ echo -ne "
                       Installing CyberRe Grub theme
 -------------------------------------------------------------------------
 "
-THEME_DIR=/mnt/boot/grub/themes
+THEME_DIR=/boot/grub/themes
 THEME_NAME=CyberRe
 echo -e "Creating the theme directory..."
-mkdir -p ${THEME_DIR}/${THEME_NAME}
+mkdir -p /mnt/${THEME_DIR}/${THEME_NAME}
 echo -e "Copying the theme..."
-cp -a ${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
+cp -a /mnt/${THEME_NAME}/* /mnt/${THEME_DIR}/${THEME_NAME}
 echo -e "Backing up Grub config..."
 cp -an /mnt/etc/default/grub /mnt/etc/default/grub.bak
 echo -e "Setting the theme as the default..."
