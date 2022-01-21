@@ -515,33 +515,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Done"
     
-    # Enable AppArmor notifications
-    # Must create ~/.config/autostart first
-
-    echo -ne "
-    -------------------------------------------------------------------------
-                         Enable AppArmor notifications
-    -------------------------------------------------------------------------
-    "
-
-    mkdir -p -m 700 /home/${username}/.config/autostart/
-    bash -c "cat > /home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
-    [Desktop Entry]
-    Type=Application
-    Name=AppArmor Notify
-    Comment=Receive on screen notifications of AppArmor denials
-    TryExec=aa-notify
-    Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
-    StartupNotify=false
-    NoDisplay=true
-    'EOF'
-
-    chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop
-    arch-chroot /mnt chown -R $username:$username /home/${username}/.config
-
-    # Change audit logging group
-    echo "log_group = audit" >> /etc/audit/auditd.conf
-
     # Enabling audit service
     systemctl enable auditd &>/dev/null
 
@@ -687,6 +660,31 @@ arch-chroot /mnt /bin/bash -e <<EOF
     
     
 EOF
+
+# Enable AppArmor notifications
+# Must create ~/.config/autostart first
+echo -ne "
+-------------------------------------------------------------------------
+                     Enable AppArmor notifications
+-------------------------------------------------------------------------
+"
+mkdir -p -m 700 /mnt//home/${username}/.config/autostart/
+bash -c "cat > /mnt//home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+[Desktop Entry]
+Type=Application
+Name=AppArmor Notify
+Comment=Receive on screen notifications of AppArmor denials
+TryExec=aa-notify
+Exec=aa-notify -p -s 1 -w 60 -f /mnt/var/log/audit/audit.log
+StartupNotify=false
+NoDisplay=true
+'EOF'
+
+chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
+arch-chroot /mnt chown -R $username:$username /mnt/home/${username}/.config
+
+# Change audit logging group
+echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
 
 cd $pwd
 
