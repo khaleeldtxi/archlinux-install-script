@@ -39,8 +39,6 @@ timedatectl set-ntp true &>/dev/null
 
 # Setting up mirrors for optimal download
 
-sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-pacman -S --noconfirm curl pacman-contrib terminus-font reflector
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 
 iso=$(curl -4 ifconfig.co/country-iso)
@@ -52,7 +50,8 @@ echo -ne "
 
 # Update mirrors
 reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
-pacman -Syy
+sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
+pacman -Syy --noconfirm curl pacman-contrib terminus-font reflector
 
 clear
 
@@ -497,12 +496,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     mount -a
     chmod 750 /.snapshots
 
-    echo "Adding $username with root privilege."
-    useradd -m $username
-    usermod -aG wheel $username
-    groupadd -r audit
-    gpasswd -a $username audit
-
+    
     echo -ne "
     -------------------------------------------------------------------------
                         Setting root & user password
@@ -514,6 +508,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     usermod -aG wheel root
     useradd -m -G wheel -s /bin/bash $username 
     echo -e "$password\n$password" | passwd $username
+    groupadd -r audit
+    gpasswd -a $username audit
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
