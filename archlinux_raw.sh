@@ -259,29 +259,31 @@ btrfs subvolume create /mnt/@ &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots &>/dev/null
 mkdir /mnt/@/.snapshots/1 &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots/1/snapshot &>/dev/null
-btrfs subvolume create /mnt/@/boot &>/dev/null
+mkdir /mnt/@/boot &>/dev/null
+btrfs subvolume create /mnt/@/boot/grub &>/dev/null
 btrfs subvolume create /mnt/@/home &>/dev/null
 btrfs subvolume create /mnt/@/root &>/dev/null
 btrfs subvolume create /mnt/@/srv &>/dev/null
-btrfs subvolume create /mnt/@/var_log &>/dev/null
-btrfs subvolume create /mnt/@/var_log_journal &>/dev/null
-btrfs subvolume create /mnt/@/var_cache &>/dev/null
-btrfs subvolume create /mnt/@/var_crash &>/dev/null
-btrfs subvolume create /mnt/@/var_tmp &>/dev/null
-btrfs subvolume create /mnt/@/var_spool &>/dev/null
-btrfs subvolume create /mnt/@/var_lib_libvirt_images &>/dev/null
-btrfs subvolume create /mnt/@/var_lib_machines &>/dev/null
+mkdir /mnt/@/var &>/dev/null
+btrfs subvolume create /mnt/@/var/log &>/dev/null
+btrfs subvolume create /mnt/@/var/log/journal &>/dev/null
+btrfs subvolume create /mnt/@/var/cache &>/dev/null
+btrfs subvolume create /mnt/@/var/crash &>/dev/null
+btrfs subvolume create /mnt/@/var/tmp &>/dev/null
+btrfs subvolume create /mnt/@/var/spool &>/dev/null
+mkdir -p /mnt/@/var/lib/libvirt &>/dev/null
+btrfs subvolume create /mnt/@/var/lib/libvirt/images &>/dev/null
+btrfs subvolume create /mnt/@/var/lib/machines &>/dev/null
 
-chattr +C /mnt/@/boot
 chattr +C /mnt/@/srv
-chattr +C /mnt/@/var_log
-chattr +C /mnt/@/var_log_journal
-chattr +C /mnt/@/var_crash
-chattr +C /mnt/@/var_cache
-chattr +C /mnt/@/var_tmp
-chattr +C /mnt/@/var_spool
-chattr +C /mnt/@/var_lib_libvirt_images
-chattr +C /mnt/@/var_lib_machines
+chattr +C /mnt/@/var/log
+chattr +C /mnt/@/var/log/journal
+chattr +C /mnt/@/var/cache
+chattr +C /mnt/@/var/crash
+chattr +C /mnt/@/var/tmp
+chattr +C /mnt/@/var/spool
+chattr +C /mnt/@/var/lib/libvirt/images
+chattr +C /mnt/@/var/lib/machines
 
 #Set the default BTRFS Subvol to Snapshot 1 before pacstrapping
 btrfs subvolume set-default "$(btrfs subvolume list /mnt | grep "@/.snapshots/1/snapshot" | grep -oP '(?<=ID )[0-9]+')" /mnt
@@ -309,24 +311,25 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $BTRFS /mnt
-mkdir -p /mnt/{boot,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines}
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot $BTRFS /mnt/boot
+mkdir -p /mnt/{boot/grub,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines}
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot/grub $BTRFS /mnt/boot/grub
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/root $BTRFS /mnt/root
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/home $BTRFS /mnt/home
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/.snapshots $BTRFS /mnt/.snapshots
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/srv $BTRFS /mnt/srv
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var_log $BTRFS /mnt/var/log
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/log $BTRFS /mnt/var/log
 mkdir -p /mnt/var/log/journal
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,subvol=@/var_log_journal $BTRFS /mnt/var/log/journal
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var_crash $BTRFS /mnt/var/crash
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var_cache $BTRFS /mnt/var/cache
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,subvol=@/var_tmp $BTRFS /mnt/var/tmp
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var_spool $BTRFS /mnt/var/spool
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var_lib_libvirt_images $BTRFS /mnt/var/lib/libvirt/images
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var_lib_machines $BTRFS /mnt/var/lib/machines
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,subvol=@/var/log/journal $BTRFS /mnt/var/log/journal
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/crash $BTRFS /mnt/var/crash
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/cache $BTRFS /mnt/var/cache
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,subvol=@/var/tmp $BTRFS /mnt/var/tmp
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/spool $BTRFS /mnt/var/spool
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/libvirt/images $BTRFS /mnt/var/lib/libvirt/images
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/machines $BTRFS /mnt/var/lib/machines
 
-mkdir -p /mnt/boot/efi
-mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
+mkdir -p /mnt/efi
+mount -o nodev,nosuid,noexec $ESP /mnt/efi
+
 
 echo -ne "
 -------------------------------------------------------------------------
@@ -442,6 +445,15 @@ EOF
 
 chmod 600 /mnt/etc/NetworkManager/conf.d/00-macrandomize.conf
 
+# Disable Connectivity Check.
+bash -c 'cat > /mnt/etc/NetworkManager/conf.d/20-connectivity.conf' <<-'EOF'
+[connectivity]
+uri=http://www.archlinux.org/check_network_status.txt
+interval=0
+EOF
+
+chmod 600 /mnt/etc/NetworkManager/conf.d/20-connectivity.conf
+
 # Enable IPv6 privacy extensions
 bash -c 'cat > /mnt/etc/NetworkManager/conf.d/ip6-privacy.conf' <<-'EOF'
 [connection]
@@ -471,16 +483,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
           
     echo -ne "
     -------------------------------------------------------------------------
-                         Installing GRUB on /boot/efi
+                         Installing GRUB on /efi
     -------------------------------------------------------------------------
     "
-    # Installing GRUB
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
-    
-    # Creating grub config file.
-    echo "Creating GRUB config file."
-    grub-mkconfig -o /boot/grub/grub.cfg
-    
     # Generating a new initramfs
     echo "Creating a new initramfs."
     chmod 600 /boot/initramfs-linux* &>/dev/null
@@ -496,6 +501,13 @@ arch-chroot /mnt /bin/bash -e <<EOF
     mount -a
     chmod 750 /.snapshots
 
+    # Installing GRUB
+    grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
+    
+    # Creating grub config file.
+    echo "Creating GRUB config file."
+    grub-mkconfig -o /boot/grub/grub.cfg
+
     
     echo -ne "
     -------------------------------------------------------------------------
@@ -506,11 +518,13 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Giving wheel user sudo access
     echo -e "$root_password\n$root_password" | passwd root
     usermod -aG wheel root
-    useradd -m -G wheel -s /bin/bash $username 
+    useradd -m -G wheel -s /bin/bash $username
+    usermod -a -G wheel "$name" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
     echo -e "$password\n$password" | passwd $username
     groupadd -r audit
     gpasswd -a $username audit
-    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
+    sed -i 's/# %wheel ALL=(ALL) ALL/"%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/paru,/usr/bin/pacman -Syyuw --noconfirm"
+/' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
     echo "Done"
@@ -524,6 +538,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Enabling NetworkManager
     echo "Enabling NetworkManager"
     systemctl enable NetworkManager &>/dev/null
+    systemctl enable systemd-resolved &>/dev/null
 
     # Enabling SDDM
     echo "Enabling sddm"
@@ -607,19 +622,11 @@ arch-chroot /mnt /bin/bash -e <<EOF
     ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
     echo "zsh configured."
 
-    # kde configuration
-    #echo -ne "
-    #-------------------------------------------------------------------------
-    #                      kde configuration
-    #-------------------------------------------------------------------------
-    #"
-    #export PATH=$PATH:~/.local/bin
-    ##cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
-    #pip install konsave
-    #konsave -i ~/archlinux-install-script/kde.knsv
-    #sleep 1
-    #konsave -a kde
+    # Make zsh the default shell for the user.
+    chsh -s /bin/zsh "$username" >/dev/null 2>&1
+    sudo -u "$username" mkdir -p "/home/$username/.cache/zsh/"
 
+    
     #Install paru
     echo -ne "
     -------------------------------------------------------------------------
@@ -639,32 +646,34 @@ arch-chroot /mnt /bin/bash -e <<EOF
     systemctl enable reflector.timer &>/dev/null
     echo "Enabled Reflector."
 
+    # Get rid of system beep
+    rmmod pcspkr
+	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
+
+    # kde configuration
+    #echo -ne "
+    #-------------------------------------------------------------------------
+    #                      kde configuration
+    #-------------------------------------------------------------------------
+    #"
+    #export PATH=$PATH:~/.local/bin
+    ##cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+    #pip install konsave
+    #konsave -i ~/archlinux-install-script/kde.knsv
+    #sleep 1
+    #konsave -a kde
+
+    #echo -ne "
+    #-------------------------------------------------------------------------
+    #                     Setting up SDDM Theme
+    #-------------------------------------------------------------------------
+    #"
+    #cat <<EOF > /etc/sddm.conf
+    #[Theme]
+    #Current=Nordic
+    #EOF
+
 EOF
-
-# Enable AppArmor notifications
-# Must create ~/.config/autostart first
-echo -ne "
--------------------------------------------------------------------------
-                     Enable AppArmor notifications
--------------------------------------------------------------------------
-"
-mkdir -p -m 700 /mnt/home/${username}/.config/autostart/
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
-[Desktop Entry]
-Type=Application
-Name=AppArmor Notify
-Comment=Receive on screen notifications of AppArmor denials
-TryExec=aa-notify
-Exec=aa-notify -p -s 1 -w 60 -f /mnt/var/log/audit/audit.log
-StartupNotify=false
-NoDisplay=true
-EOF
-
-chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
-#chown -R $username:$username /mnt/home/${username}/.config
-
-# Change audit logging group
-echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
 
 # Installing CyberRe Grub theme
 echo -ne "
@@ -689,6 +698,31 @@ grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
 echo "CyberRe Grub theme installed."
 
+
+# Enable AppArmor notifications
+# Must create ~/.config/autostart first
+echo -ne "
+-------------------------------------------------------------------------
+                     Enable AppArmor notifications
+-------------------------------------------------------------------------
+"
+mkdir -p -m 700 /mnt/home/${username}/.config/autostart/
+bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+[Desktop Entry]
+Type=Application
+Name=AppArmor Notify
+Comment=Receive on screen notifications of AppArmor denials
+TryExec=aa-notify
+Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
+StartupNotify=false
+NoDisplay=true
+EOF
+
+chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
+arch-chroot /mnt chown -R $username:$username /home/${username}/.config
+
+# Change audit logging group
+echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
 
 cd $pwd
 
