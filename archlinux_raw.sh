@@ -338,9 +338,8 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs zsh zsh-completions snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs zsh zsh-completions snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db wireplumber --noconfirm --needed
 
-#pacstrap /mnt nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntx-highlighting mlocate man-db wireplumber --noconfirm --needed
 
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
@@ -525,7 +524,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     gpasswd -a $username audit
     sed -i 's/# %wheel ALL=(ALL) ALL/"%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/paru,/usr/bin/pacman -Syyuw --noconfirm"
 /' /etc/sudoers
-    echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    #echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
     echo "Done"
     
@@ -651,27 +650,27 @@ arch-chroot /mnt /bin/bash -e <<EOF
 	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
 
     # kde configuration
-    #echo -ne "
-    #-------------------------------------------------------------------------
-    #                      kde configuration
-    #-------------------------------------------------------------------------
-    #"
-    #export PATH=$PATH:~/.local/bin
-    ##cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
-    #pip install konsave
-    #konsave -i ~/archlinux-install-script/kde.knsv
-    #sleep 1
-    #konsave -a kde
+    echo -ne "
+    -------------------------------------------------------------------------
+                          kde configuration
+    -------------------------------------------------------------------------
+    "
+    export PATH=$PATH:~/.local/bin
+    #cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
+    pip install konsave
+    konsave -i ~/archlinux-install-script/kde.knsv
+    sleep 1
+    konsave -a kde
 
-    #echo -ne "
-    #-------------------------------------------------------------------------
-    #                     Setting up SDDM Theme
-    #-------------------------------------------------------------------------
-    #"
-    #cat <<EOF > /etc/sddm.conf
-    #[Theme]
-    #Current=Nordic
-    #EOF
+    echo -ne "
+    -------------------------------------------------------------------------
+                         Setting up SDDM Theme
+    -------------------------------------------------------------------------
+    "
+    cat <<EOF > /etc/sddm.conf
+    [Theme]
+    Current=Nordic
+    EOF
 
 EOF
 
