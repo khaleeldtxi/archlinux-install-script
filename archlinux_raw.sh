@@ -340,6 +340,9 @@ echo -ne "
 # Pacstrap (setting up a base sytem onto the new root)
 pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor --noconfirm --needed
 
+# Routing jack2 through PipeWire.
+echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
+
 # Generating /etc/fstab
 echo "Generating a new fstab."
 genfstab -U -p /mnt >> /mnt/etc/fstab
