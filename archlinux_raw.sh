@@ -339,7 +339,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
 
 # Routing jack2 through PipeWire.
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
@@ -496,9 +496,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Pacman eye-candy features installed."
 
 
-    #Installing KDE, Nvidia, Wayland, Pipewire, Snapper, zsh, kvm and other optional packages
-    pacman -Syyu terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
-
     echo -ne "
     -------------------------------------------------------------------------
                          Installing GRUB on /efi
@@ -540,7 +537,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "$password\n$password" | passwd $username
     groupadd -r audit
     gpasswd -a $username audit
+    sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    chown $username:$username /home/$username
     
     echo "Done"
 
@@ -596,7 +595,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Set shutdown timeout"
     sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1/g' /etc/default/grub
+    sed -i 's,GRUB_CMDLINE_LINUX_DEFAULT= loglevel=3 quiet,GRUB_CMDLINE_LINUX_DEFAULT= loglevel=3,g' /etc/default/grub
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1 /g' /etc/default/grub
 
     if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
         echo -e "Intel CPU was detected -> add intel_iommu=on"
@@ -609,24 +609,25 @@ arch-chroot /mnt /bin/bash -e <<EOF
     grub-mkconfig -o /boot/grub/grub.cfg
 
     
-    echo -ne "
-    -------------------------------------------------------------------------
-                            zsh configuration
-    -------------------------------------------------------------------------
-    "
-
-    cd /home/$username/
-    mkdir -p /home/$username/.cache
-    touch "/home/$username/.cache/zshhistory"
-    sudo -u $username git clone "https://github.com/ChrisTitusTech/zsh"
-    sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/$username/powerlevel10k
-    ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
-    echo "zsh configured."
-
-    # Make zsh the default shell for the user.
-    chsh -s /bin/zsh "$username" >/dev/null 2>&1
-    echo "zsh made the default shell for user $username"
-    #sudo -u "$username" mkdir -p /home/$username/.cache/zsh
+    #echo -ne "
+    #-------------------------------------------------------------------------
+    #                        zsh configuration
+    #-------------------------------------------------------------------------
+    #"
+#
+    #cd /home/$username/
+    #mkdir -p /home/$username/.cache
+    #chown $username:$username /home/$username/.cache
+    #touch "/home/$username/.cache/zshhistory"
+    #sudo -u $username git clone "https://github.com/ChrisTitusTech/zsh"
+    #sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/$username/powerlevel10k
+    #ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
+    #echo "zsh configured."
+#
+    ## Make zsh the default shell for the user.
+    #chsh -s /bin/zsh "$username" >/dev/null 2>&1
+    #echo "zsh made the default shell for user $username"
+    ##sudo -u "$username" mkdir -p /home/$username/.cache/zsh
 
     
     #Install paru
@@ -652,6 +653,14 @@ arch-chroot /mnt /bin/bash -e <<EOF
     rmmod pcspkr
 	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
 
+    echo "creating ~/.config/autostart - required to enable AppArmor notifications"
+    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    chown -R $username:$username /home/${username}/.config &>/dev/null
+    chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+
+    echo "Enabling libvirtd service"
+    systemctl enable --now libvirtd &>/dev/null
+    usermod -G libvirt -a $username
 
     # Installing CyberRe Grub theme
     echo -ne "
@@ -670,6 +679,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     cp -an /etc/default/grub /etc/default/grub.bak
     echo -e "Setting the theme as the default..."
     grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+    chown $username:$username /etc/default/grub
     echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
     echo -e "Updating grub..."
     sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
@@ -677,38 +687,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "All set!"
     echo "CyberRe Grub theme installed."
-
-    # kde configuration
-    echo -ne "
-    -------------------------------------------------------------------------
-                          kde configuration
-    -------------------------------------------------------------------------
-    "
-    export PATH=$PATH:~/.local/bin
-    #cp -r ~/archlinux-install-script/dotfiles/* ~/.config/
-    pip install konsave
-    konsave -i ~/archlinux-install-script/kde.knsv
-    sleep 1
-    konsave -a kde
-
-    echo -ne "
-    -------------------------------------------------------------------------
-                         Setting up SDDM Theme
-    -------------------------------------------------------------------------
-    "
-    cat <<EOF > /etc/sddm.conf
-    [Theme]
-    Current=Nordic
-    EOF
-
-    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
-    chown -R $username:$username /home/${username}/.config &>/dev/null
-
-    echo "Enabling libvirtd service"
-    systemctl enable --now libvirtd &>/dev/null
-    usermod -G libvirt -a $username
     
-
 EOF
 
 
@@ -731,7 +710,7 @@ StartupNotify=false
 NoDisplay=true
 EOF
 
-chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
+
 
 # Change audit logging group
 echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
