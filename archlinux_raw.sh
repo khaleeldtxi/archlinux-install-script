@@ -338,10 +338,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware terminus-font grub grub-btrfs zsh-completions snapper snap-pac efibootmgr sudo networkmanager nano firewalld zram-generator reflector bash-completion btrfs-progs dosfstools os-prober sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie curl htop p7zip zsh zsh-autosuggestions zsh-syntax-highlighting mlocate man-db wireplumber --noconfirm --needed
-
-
-echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl --noconfirm --needed
 
 # Generating /etc/fstab
 echo "Generating a new fstab."
@@ -385,10 +382,6 @@ curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/g
 
 # Setting GRUB configuration file permissions
 chmod 755 /mnt/etc/grub.d/*
-
-# Configure AppArmor Parser caching
-sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
-sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Blacklisting kernel modules
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/modprobe.d/30_security-misc.conf >> /mnt/etc/modprobe.d/30_security-misc.conf
@@ -479,7 +472,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Generating locales.my keys aren't even on
     echo "Generating locales."
     locale-gen &>/dev/null
-          
+
+    #Installing KDE, Nvidia, Wayland, Pipewire, Snapper, zsh, kvm and other optional packages
+    pacman -Syy terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+
     echo -ne "
     -------------------------------------------------------------------------
                          Installing GRUB on /efi
@@ -523,9 +519,17 @@ arch-chroot /mnt /bin/bash -e <<EOF
     groupadd -r audit
     gpasswd -a $username audit
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    systemctl enable --now libvirtd
+    systemctl enable --now virtlogd.socket
+    usermod -G libvirt -a $username
+    virsh net-start default
+    virsh net-autostart default
 
     echo "Done"
+
     
+    echo "/usr/lib/pipewire-0.3/jack" > /etc/ld.so.conf.d/pipewire-jack.conf
+
     # Enabling audit service
     systemctl enable auditd &>/dev/null
 
@@ -695,6 +699,10 @@ grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
 echo "CyberRe Grub theme installed."
 
+
+# Configure AppArmor Parser caching
+sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
+sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
