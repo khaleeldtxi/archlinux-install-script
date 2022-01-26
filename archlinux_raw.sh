@@ -338,7 +338,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor --noconfirm --needed
 
 # Generating /etc/fstab
 echo "Generating a new fstab."
@@ -370,6 +370,10 @@ sed -i 's,#COMPRESSION="zstd",COMPRESSION="zstd",g' /mnt/etc/mkinitcpio.conf
 echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
+
+# Configure AppArmor Parser caching
+sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
+sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Enabling CPU Mitigations
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_cpu_mitigations.cfg >> /mnt/etc/grub.d/40_cpu_mitigations
@@ -474,7 +478,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     locale-gen &>/dev/null
 
     #Installing KDE, Nvidia, Wayland, Pipewire, Snapper, zsh, kvm and other optional packages
-    pacman -Syy terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree apparmor pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+    yes y | pacman -Syyu terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
 
     echo -ne "
     -------------------------------------------------------------------------
@@ -687,7 +691,7 @@ THEME_NAME=CyberRe
 echo -e "Creating the theme directory..."
 mkdir -p /mnt/${THEME_DIR}/${THEME_NAME}
 echo -e "Copying the theme..."
-cp -a /mnt/archlinux-install-script/${THEME_NAME}/* /mnt/${THEME_DIR}/${THEME_NAME}
+cp -a ~/archlinux-install-script/${THEME_NAME}/* /mnt/${THEME_DIR}/${THEME_NAME}
 echo -e "Backing up Grub config..."
 cp -an /mnt/etc/default/grub /mnt/etc/default/grub.bak
 echo -e "Setting the theme as the default..."
@@ -699,10 +703,6 @@ grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
 echo "CyberRe Grub theme installed."
 
-
-# Configure AppArmor Parser caching
-sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
-sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
