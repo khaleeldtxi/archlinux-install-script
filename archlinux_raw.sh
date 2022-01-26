@@ -491,7 +491,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     pacman -Sy --noconfirm
     echo "Pacman eye-candy features installed."
 
-    
+
     #Installing KDE, Nvidia, Wayland, Pipewire, Snapper, zsh, kvm and other optional packages
     pacman -Syyu terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
 
@@ -537,15 +537,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     groupadd -r audit
     gpasswd -a $username audit
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-    systemctl enable --now libvirtd
-    systemctl enable --now virtlogd.socket
-    usermod -G libvirt -a $username
-    virsh net-start default
-    virsh net-autostart default
-
-    mkdir -p -m 700 /home/${username}/.config/autostart
-    chown -R $username:$username /home/${username}/.config
-
+    
     echo "Done"
 
     
@@ -680,6 +672,16 @@ arch-chroot /mnt /bin/bash -e <<EOF
     [Theme]
     Current=Nordic
     EOF
+
+    mkdir -p -m 700 /home/${username}/.config/autostart
+    chown -R $username:$username /home/${username}/.config
+    
+    echo "Enabling libvirtd service"
+    systemctl enable --now libvirtd
+    systemctl enable --now virtlogd.socket
+    usermod -G libvirt -a $username
+    virsh net-start default
+    virsh net-autostart default
 
 EOF
 
