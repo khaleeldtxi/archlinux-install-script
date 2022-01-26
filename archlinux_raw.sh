@@ -346,7 +346,7 @@ echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 # Generating /etc/fstab
 echo "Generating a new fstab."
 genfstab -U -p /mnt >> /mnt/etc/fstab
-sed -i 's#,subvolid=258,subvol=/@/.snapshots/1/snapshot,subvol=@/.snapshots/1/snapshot##g' /mnt/etc/fstab
+sed -i 's#,subvolid=258,subvol=/@/.snapshots/1/snapshot##g' /mnt/etc/fstab
 
 # Setting hostname
 echo "$hostname" > /mnt/etc/hostname
