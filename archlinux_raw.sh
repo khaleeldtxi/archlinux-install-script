@@ -596,7 +596,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Set shutdown timeout"
     sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
     sed -i 's,GRUB_CMDLINE_LINUX_DEFAULT= loglevel=3 quiet,GRUB_CMDLINE_LINUX_DEFAULT= loglevel=3,g' /etc/default/grub
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1 /g' /etc/default/grub
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1 nvidia-drm.modeset=1" /g' /etc/default/grub
 
     if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
         echo -e "Intel CPU was detected -> add intel_iommu=on"
