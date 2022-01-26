@@ -522,9 +522,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "$password\n$password" | passwd $username
     groupadd -r audit
     gpasswd -a $username audit
-    sed -i 's/# %wheel ALL=(ALL) ALL/"%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/paru,/usr/bin/pacman -Syyuw --noconfirm"
+    #sed -i 's/# %wheel ALL=(ALL) ALL/"%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/paru,/usr/bin/pacman -Syyuw --noconfirm"
 /' /etc/sudoers
-    #echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
     echo "Done"
     
@@ -554,7 +554,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Enabled Firewalld."
 
     # Run following command after installing kdeconnect
-    #sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
+    sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
     # Enabling systemd-oomd
     systemctl enable systemd-oomd &>/dev/null
@@ -685,7 +685,7 @@ THEME_NAME=CyberRe
 echo -e "Creating the theme directory..."
 mkdir -p /mnt/${THEME_DIR}/${THEME_NAME}
 echo -e "Copying the theme..."
-cp -a /mnt/${THEME_NAME}/* /mnt/${THEME_DIR}/${THEME_NAME}
+cp -a /mnt/archlinux-install-script/${THEME_NAME}/* /mnt/${THEME_DIR}/${THEME_NAME}
 echo -e "Backing up Grub config..."
 cp -an /mnt/etc/default/grub /mnt/etc/default/grub.bak
 echo -e "Setting the theme as the default..."
