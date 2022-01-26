@@ -565,11 +565,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
 
     # Enabling Firewalld
-    systemctl enable --now firewalld  &>/dev/null
+    systemctl enable firewalld &>/dev/null
     echo "Enabled Firewalld."
-
-    # Run following command after installing kdeconnect
-    sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
 
     # Enabling systemd-oomd
     systemctl enable systemd-oomd &>/dev/null
@@ -673,9 +670,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
     Current=Nordic
     EOF
 
-    mkdir -p -m 700 /home/${username}/.config/autostart
+    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop
     chown -R $username:$username /home/${username}/.config
-    
+
     echo "Enabling libvirtd service"
     systemctl enable --now libvirtd
     systemctl enable --now virtlogd.socket
@@ -704,6 +701,7 @@ grep "GRUB_THEME=" /mnt/etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=
 echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /mnt/etc/default/grub
 echo -e "Updating grub..."
 sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
+echo "Regenerate Grub configuration"
 grub-mkconfig -o /mnt/boot/grub/grub.cfg
 echo -e "All set!"
 echo "CyberRe Grub theme installed."
@@ -736,3 +734,6 @@ cd $pwd
 
 # Finishing up
 echo "Done, you may now wish to reboot. Further changes can be done by chrooting into mnt."
+
+# Run following command after rebooting and installing kdeconnect
+#sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
