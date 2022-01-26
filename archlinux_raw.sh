@@ -49,7 +49,8 @@ echo -ne "
 "
 
 # Update mirrors
-reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+#reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+reflector --verbose --country 'Germany' -l 5 --sort rate --save /etc/pacman.d/mirrorlist 
 sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 pacman -Syy --noconfirm curl pacman-contrib terminus-font reflector
 
