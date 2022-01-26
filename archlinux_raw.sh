@@ -548,7 +548,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
 
     # Enabling Firewalld
-    systemctl enable firewalld  &>/dev/null
+    systemctl enable --now firewalld  &>/dev/null
     echo "Enabled Firewalld."
 
     # Run following command after installing kdeconnect
