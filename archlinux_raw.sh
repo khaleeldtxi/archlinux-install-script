@@ -477,6 +477,21 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Generating locales."
     locale-gen &>/dev/null
 
+    echo -ne "
+    -------------------------------------------------------------------------
+                         Installing Pacman eye-candy features
+    -------------------------------------------------------------------------
+    "
+
+    # Pacman eye-candy features
+    sed -i 's/#Color/Color\nILoveCandy/' /etc/pacman.conf
+    sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
+    sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
+    sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
+    pacman -Sy --noconfirm
+    echo "Pacman eye-candy features installed."
+
+    
     #Installing KDE, Nvidia, Wayland, Pipewire, Snapper, zsh, kvm and other optional packages
     pacman -Syyu terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
 
@@ -579,20 +594,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "" >> /etc/bash.bashrc
     echo "umask 077" >> /etc/bash.bashrc
     echo "Setting umask to 077 - Done"
-
-    echo -ne "
-    -------------------------------------------------------------------------
-                         Installing Pacman eye-candy features
-    -------------------------------------------------------------------------
-    "
-
-    # Pacman eye-candy features
-    sed -i 's/#Color/Color\nILoveCandy/' /etc/pacman.conf
-    sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
-    sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
-    sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
-    pacman -Sy --noconfirm
-    echo "Pacman eye-candy features installed."
 
     sed -i 's/#MAKEFLAGS="-j2"/MAKEFLAGS="-j$(nproc)"/g; s/-)/--threads=0 -)/g; s/gzip/pigz/g; s/bzip2/pbzip2/g' /etc/makepkg.conf
     journalctl --vacuum-size=100M --vacuum-time=2weeks
