@@ -518,12 +518,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "$root_password\n$root_password" | passwd root
     usermod -aG wheel root
     useradd -m -G wheel -s /bin/bash $username
-    usermod -a -G wheel "$name" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
+    usermod -a -G wheel "$username" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
     echo -e "$password\n$password" | passwd $username
     groupadd -r audit
     gpasswd -a $username audit
-    #sed -i 's/# %wheel ALL=(ALL) ALL/"%wheel ALL=(ALL) NOPASSWD: /usr/bin/shutdown,/usr/bin/reboot,/usr/bin/systemctl suspend,/usr/bin/wifi-menu,/usr/bin/mount,/usr/bin/umount,/usr/bin/pacman -Syu,/usr/bin/pacman -Syyu,/usr/bin/packer -Syu,/usr/bin/packer -Syyu,/usr/bin/systemctl restart NetworkManager,/usr/bin/rc-service NetworkManager restart,/usr/bin/pacman -Syyu --noconfirm,/usr/bin/loadkeys,/usr/bin/paru,/usr/bin/pacman -Syyuw --noconfirm"
-/' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
     echo "Done"
