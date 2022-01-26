@@ -624,7 +624,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Make zsh the default shell for the user.
     chsh -s /bin/zsh "$username" >/dev/null 2>&1
-    sudo -u "$username" mkdir -p /home/$username/.cache/zsh
+    echo "zsh made the default shell for user $username"
+    #sudo -u "$username" mkdir -p /home/$username/.cache/zsh
 
     
     #Install paru
@@ -699,15 +700,13 @@ arch-chroot /mnt /bin/bash -e <<EOF
     Current=Nordic
     EOF
 
-    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop
-    chown -R $username:$username /home/${username}/.config
+    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    chown -R $username:$username /home/${username}/.config &>/dev/null
 
     echo "Enabling libvirtd service"
-    systemctl enable --now libvirtd
-    systemctl enable --now virtlogd.socket
+    systemctl enable --now libvirtd &>/dev/null
     usermod -G libvirt -a $username
-    virsh net-start default
-    virsh net-autostart default
+    
 
 EOF
 
@@ -743,3 +742,6 @@ echo "Done, you may now wish to reboot. Further changes can be done by chrooting
 
 # Run following command after rebooting and installing kdeconnect
 #sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
+#systemctl enable --now virtlogd.socket
+#virsh net-start default
+#virsh net-autostart default
