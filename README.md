@@ -4,7 +4,7 @@ The Archlinux-Install-Script allow the entire Arch Linux installation process to
 
 
 ## Features
-Btrfs - Subvolumes (Inspired from OpenSuse layout)  
+Btrfs - Subvolumes (Inspired by OpenSuse layout)  
 Snapper  
 KDE-Plasma  
 Wayland  
