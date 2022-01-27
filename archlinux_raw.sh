@@ -613,10 +613,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
     #                        zsh configuration
     #-------------------------------------------------------------------------
     #"
-
-    chsh -s /bin/zsh
-    echo -e "$password" | sudo -u $username chsh -s /bin/zsh
-    echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
+    #
+    #chsh -s /bin/zsh
+    #echo -e "$password" | sudo -u $username chsh -s /bin/zsh
+    #echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
 
 
     #Install paru
@@ -677,11 +677,11 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "created ~/.config/autostart"
     
     # Enabling AppArmor
-    echo "Enabling AppArmor."
-    systemctl enable apparmor &>/dev/null
-    systemctl enable auditd.service &>/dev/null
-    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
-    echo "AppArmor enabled."
+    #echo "Enabling AppArmor."
+    #systemctl enable apparmor &>/dev/null
+    #systemctl enable auditd.service &>/dev/null
+    #sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
+    #echo "AppArmor enabled."
 
     echo "Enabling libvirtd service"
     systemctl enable libvirtd &>/dev/null
@@ -693,21 +693,21 @@ EOF
 
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
-echo -ne "
--------------------------------------------------------------------------
-                     Enable AppArmor notifications
--------------------------------------------------------------------------
-"
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
-[Desktop Entry]
-Type=Application
-Name=AppArmor Notify
-Comment=Receive on screen notifications of AppArmor denials
-TryExec=aa-notify
-Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
-StartupNotify=false
-NoDisplay=true
-EOF
+#echo -ne "
+#-------------------------------------------------------------------------
+#                     Enable AppArmor notifications
+#-------------------------------------------------------------------------
+#"
+#bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+#[Desktop Entry]
+#Type=Application
+#Name=AppArmor Notify
+#Comment=Receive on screen notifications of AppArmor denials
+#TryExec=aa-notify
+#Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
+#StartupNotify=false
+#NoDisplay=true
+#EOF
 
 
 
