@@ -550,7 +550,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
 
     # bypass polkit password prompt
-    cat << EOT >> /etc/polkit-1/rules.d/49-nopasswd_global.rules
+    cat << EOF >> /etc/polkit-1/rules.d/49-nopasswd_global.rules
     /* Allow members of the wheel group to execute any actions
      * without password authentication, similar to "sudo NOPASSWD:"
      */
@@ -559,9 +559,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
             return polkit.Result.YES;
         }
     });
-    EOT
+    EOF
 
-    cat << EOT >> /etc/polkit-1/rules.d/50-udisks.rules
+    cat << EOF >> /etc/polkit-1/rules.d/50-udisks.rules
     // Original rules: https://github.com/coldfix/udiskie/wiki/Permissions
     // Changes: Added org.freedesktop.udisks2.filesystem-mount-system, as this is used by Dolphin.
     polkit.addRule(function(action, subject) {
@@ -591,7 +591,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
         return permission[action.id];
       }
     });
-    EOT
+    EOF
 
     echo -e "\nDone.\n\n"
     
