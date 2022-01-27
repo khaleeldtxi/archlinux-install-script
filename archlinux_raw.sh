@@ -339,7 +339,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
 
 # Routing jack2 through PipeWire.
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
@@ -619,21 +619,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
 
 
-    #cd /home/$username/
-    #mkdir -p /home/$username/.cache
-    #chown $username:$username /home/$username/.cache
-    #touch "/home/$username/.cache/zshhistory"
-    #sudo -u $username git clone "https://github.com/ChrisTitusTech/zsh"
-    #sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/$username/powerlevel10k
-    #ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
-    #echo "zsh configured."
-
-    ## Make zsh the default shell for the user.
-    #chsh -s /bin/zsh "$username" >/dev/null 2>&1
-    #echo "zsh made the default shell for user $username"
-    ##sudo -u "$username" mkdir -p /home/$username/.cache/zsh
-
-    
     #Install paru
     echo -ne "
     -------------------------------------------------------------------------
@@ -666,16 +651,16 @@ arch-chroot /mnt /bin/bash -e <<EOF
     THEME_DIR=/boot/grub/themes
     THEME_NAME=CyberRe
     echo -e "Creating the theme directory..."
-    mkdir -p ${THEME_DIR}/${THEME_NAME}
+    mkdir -p /boot/grub/themes/CyberRe
     echo -e "Copying the theme..."
     git clone https://github.com/khaleeldtxi/archlinux-install-script
-    cp -a archlinux-install-script/${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
+    cp -a archlinux-install-script/CyberRe/* /boot/grub/themes/CyberRe
     echo -e "Backing up Grub config..."
     cp -an /etc/default/grub /etc/default/grub.bak
     echo -e "Setting the theme as the default..."
     grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
     chown $username:$username /etc/default/grub
-    echo "GRUB_THEME=\"${THEME_DIR}/${THEME_NAME}/theme.txt\"" >> /etc/default/grub
+    echo -e "GRUB_THEME="/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
     echo -e "Updating grub..."
     sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
     echo "Regenerate Grub configuration"
@@ -684,10 +669,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "CyberRe Grub theme installed."    
 
     echo "creating ~/.config/autostart - required to enable AppArmor notifications"
-    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    mkdir -p -m 700 /home/${username}/.config/autostart &>/dev/null
     chown -R $username:$username /home/${username}/.config &>/dev/null
-    chown -R $username:$username /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
-    chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
+    chmod 700 /home/${username}/.config/autostart &>/dev/null
     echo "created ~/.config/autostart"
     
     # Enabling AppArmor
@@ -730,7 +715,8 @@ echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
 
 
 # bypass sudo password prompt
-echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
+echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /mnt/etc/sudoers.d/00_nopasswd
+
 # bypass polkit password prompt
 cat >> /mnt/etc/polkit-1/rules.d/49-nopasswd_global.rules <<-'EOF'
 /* Allow members of the wheel group to execute any actions
@@ -742,6 +728,7 @@ polkit.addRule(function(action, subject) {
     }
 });
 EOF
+
 cat >> /mnt/etc/polkit-1/rules.d/50-udisks.rules <<-'EOF'    
 // Original rules: https://github.com/coldfix/udiskie/wiki/Permissions
 // Changes: Added org.freedesktop.udisks2.filesystem-mount-system, as this is used by Dolphin.
