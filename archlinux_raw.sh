@@ -660,7 +660,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "Setting the theme as the default..."
     grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
     chown $username:$username /etc/default/grub
-    echo -e "GRUB_THEME="/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
+    echo -e "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
     echo -e "Updating grub..."
     sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
     echo "Regenerate Grub configuration"
