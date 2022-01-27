@@ -28,8 +28,20 @@ chmod a+x archlinux_raw.sh && sh archlinux_raw.sh
 Enter the following when asked:
 
 *Username\
-*Host\
+*Password\
+*Hostname\
+*Keymap\
+*Locale (in format en_US)\
 *Select Kernel (Stable, Hardened, LTS, Zen)\
 *Select Disk (example /dev/sda or /dev/nvmeon1) - EFI & Root parition will be created\
-*Locale (in format en_US)  
-*Keymap
+
+Then the script will automate the installation process.\
+
+Post installation, reboot and \
+Run following commands:\
+sudo firewall-cmd --zone=home --add-service kdeconnect --permanent\
+sudo systemctl enable --now virtlogd.socket\
+sudo virsh net-start default\
+sudo virsh net-autostart default\
+
+
