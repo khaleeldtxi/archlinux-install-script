@@ -545,56 +545,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
     chown $username:$username /home/$username
-
-    # bypass sudo password prompt
-    echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
-
-    # bypass polkit password prompt
-    cat >> /etc/polkit-1/rules.d/49-nopasswd_global.rules <<EOF
-    /* Allow members of the wheel group to execute any actions
-    * without password authentication, similar to "sudo NOPASSWD:"
-    */
-    polkit.addRule(function(action, subject) {
-        if (subject.isInGroup("wheel")) {
-            return polkit.Result.YES;
-        }
-    });
-    EOF
-
-    cat >> /etc/polkit-1/rules.d/50-udisks.rules <<EOF    
-    // Original rules: https://github.com/coldfix/udiskie/wiki/Permissions
-    // Changes: Added org.freedesktop.udisks2.filesystem-mount-system, as this is used by Dolphin.
-    polkit.addRule(function(action, subject) {
-      var YES = polkit.Result.YES;
-      // NOTE: there must be a comma at the end of each line except for the last:
-      var permission = {
-        // required for udisks1:
-        "org.freedesktop.udisks.filesystem-mount": YES,
-        "org.freedesktop.udisks.luks-unlock": YES,
-        "org.freedesktop.udisks.drive-eject": YES,
-        "org.freedesktop.udisks.drive-detach": YES,
-        // required for udisks2:
-        "org.freedesktop.udisks2.filesystem-mount": YES,
-        "org.freedesktop.udisks2.encrypted-unlock": YES,
-        "org.freedesktop.udisks2.eject-media": YES,
-        "org.freedesktop.udisks2.power-off-drive": YES,
-        // Dolphin specific
-        "org.freedesktop.udisks2.filesystem-mount-system": YES,
-        // required for udisks2 if using udiskie from another seat (e.g. systemd):
-        "org.freedesktop.udisks2.filesystem-mount-other-seat": YES,
-        "org.freedesktop.udisks2.filesystem-unmount-others": YES,
-        "org.freedesktop.udisks2.encrypted-unlock-other-seat": YES,
-        "org.freedesktop.udisks2.eject-media-other-seat": YES,
-        "org.freedesktop.udisks2.power-off-drive-other-seat": YES
-      };
-      if (subject.isInGroup("storage")) {
-        return permission[action.id];
-      }
-    });
-    EOF
-
-    echo -e "\nDone.\n\n"
-    
+      
     
     echo "/usr/lib/pipewire-0.3/jack" > /etc/ld.so.conf.d/pipewire-jack.conf
 
@@ -776,6 +727,54 @@ EOF
 
 # Change audit logging group
 echo "log_group = audit" >> /mnt/etc/audit/auditd.conf
+
+
+# bypass sudo password prompt
+echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
+# bypass polkit password prompt
+cat >> /mnt/etc/polkit-1/rules.d/49-nopasswd_global.rules <<-'EOF'
+/* Allow members of the wheel group to execute any actions
+* without password authentication, similar to "sudo NOPASSWD:"
+*/
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});
+EOF
+cat >> /mnt/etc/polkit-1/rules.d/50-udisks.rules <<-'EOF'    
+// Original rules: https://github.com/coldfix/udiskie/wiki/Permissions
+// Changes: Added org.freedesktop.udisks2.filesystem-mount-system, as this is used by Dolphin.
+polkit.addRule(function(action, subject) {
+  var YES = polkit.Result.YES;
+  // NOTE: there must be a comma at the end of each line except for the last:
+  var permission = {
+    // required for udisks1:
+    "org.freedesktop.udisks.filesystem-mount": YES,
+    "org.freedesktop.udisks.luks-unlock": YES,
+    "org.freedesktop.udisks.drive-eject": YES,
+    "org.freedesktop.udisks.drive-detach": YES,
+    // required for udisks2:
+    "org.freedesktop.udisks2.filesystem-mount": YES,
+    "org.freedesktop.udisks2.encrypted-unlock": YES,
+    "org.freedesktop.udisks2.eject-media": YES,
+    "org.freedesktop.udisks2.power-off-drive": YES,
+    // Dolphin specific
+    "org.freedesktop.udisks2.filesystem-mount-system": YES,
+    // required for udisks2 if using udiskie from another seat (e.g. systemd):
+    "org.freedesktop.udisks2.filesystem-mount-other-seat": YES,
+    "org.freedesktop.udisks2.filesystem-unmount-others": YES,
+    "org.freedesktop.udisks2.encrypted-unlock-other-seat": YES,
+    "org.freedesktop.udisks2.eject-media-other-seat": YES,
+    "org.freedesktop.udisks2.power-off-drive-other-seat": YES
+  };
+  if (subject.isInGroup("storage")) {
+    return permission[action.id];
+  }
+});
+EOF
+
+echo -e "\nDone.\n\n"
 
 cd $pwd
 
