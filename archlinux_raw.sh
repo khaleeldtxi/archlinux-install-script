@@ -492,7 +492,12 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
     sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
     sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
-    pacman -Sy --noconfirm
+    pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+    pacman-key --lsign-key FBA220DFC880C036
+    pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+    echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" >> /etc/pacman.conf
+    #sed -i '1 s|^|Server = https://es-mirror.chaotic.cx/$repo/$arch\n\n|' /etc/pacman.d/chaotic-mirrorlist
+    pacman -Syyu --noconfirm
     echo "Pacman eye-candy features installed."
 
 
@@ -540,11 +545,60 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
     chown $username:$username /home/$username
-    
-    echo "Done"
 
+    # bypass sudo password prompt
+    echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
+
+    # bypass polkit password prompt
+    cat << EOT >> /etc/polkit-1/rules.d/49-nopasswd_global.rules
+    /* Allow members of the wheel group to execute any actions
+     * without password authentication, similar to "sudo NOPASSWD:"
+     */
+    polkit.addRule(function(action, subject) {
+        if (subject.isInGroup("wheel")) {
+            return polkit.Result.YES;
+        }
+    });
+    EOT
+
+    cat << EOT >> /etc/polkit-1/rules.d/50-udisks.rules
+    // Original rules: https://github.com/coldfix/udiskie/wiki/Permissions
+    // Changes: Added org.freedesktop.udisks2.filesystem-mount-system, as this is used by Dolphin.
+    polkit.addRule(function(action, subject) {
+      var YES = polkit.Result.YES;
+      // NOTE: there must be a comma at the end of each line except for the last:
+      var permission = {
+        // required for udisks1:
+        "org.freedesktop.udisks.filesystem-mount": YES,
+        "org.freedesktop.udisks.luks-unlock": YES,
+        "org.freedesktop.udisks.drive-eject": YES,
+        "org.freedesktop.udisks.drive-detach": YES,
+        // required for udisks2:
+        "org.freedesktop.udisks2.filesystem-mount": YES,
+        "org.freedesktop.udisks2.encrypted-unlock": YES,
+        "org.freedesktop.udisks2.eject-media": YES,
+        "org.freedesktop.udisks2.power-off-drive": YES,
+        // Dolphin specific
+        "org.freedesktop.udisks2.filesystem-mount-system": YES,
+        // required for udisks2 if using udiskie from another seat (e.g. systemd):
+        "org.freedesktop.udisks2.filesystem-mount-other-seat": YES,
+        "org.freedesktop.udisks2.filesystem-unmount-others": YES,
+        "org.freedesktop.udisks2.encrypted-unlock-other-seat": YES,
+        "org.freedesktop.udisks2.eject-media-other-seat": YES,
+        "org.freedesktop.udisks2.power-off-drive-other-seat": YES
+      };
+      if (subject.isInGroup("storage")) {
+        return permission[action.id];
+      }
+    });
+    EOT
+
+    echo -e "\nDone.\n\n"
+    
     
     echo "/usr/lib/pipewire-0.3/jack" > /etc/ld.so.conf.d/pipewire-jack.conf
+
+    echo -e "\n#GTK_USE_PORTAL=1\n" >> /etc/environment
 
     # Enabling audit service
     systemctl enable auditd &>/dev/null
@@ -560,12 +614,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Enabling SDDM
     echo "Enabling sddm"
     systemctl enable sddm &>/dev/null
-
-    # Enabling AppArmor
-    echo "Enabling AppArmor."
-    systemctl enable apparmor &>/dev/null
-    systemctl enable auditd.service &>/dev/null
-    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
 
     # Enabling Firewalld
     systemctl enable firewalld &>/dev/null
@@ -595,15 +643,15 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Set shutdown timeout"
     sed -i 's/.*DefaultTimeoutStopSec=.*$/DefaultTimeoutStopSec=5s/g' /etc/systemd/system.conf
-    sed -i 's,GRUB_CMDLINE_LINUX_DEFAULT= loglevel=3 quiet,GRUB_CMDLINE_LINUX_DEFAULT= loglevel=3,g' /etc/default/grub
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1 nvidia-drm.modeset=1" /g' /etc/default/grub
+    sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"/g' /etc/default/grub
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="lsm=landlock lockdown yama apparmor bpf audit=1 nvidia-drm.modeset=1 /g' /etc/default/grub
 
     if lscpu -J | grep -q "Intel" >/dev/null 2>&1; then
         echo -e "Intel CPU was detected -> add intel_iommu=on"
-        sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="intel_iommu=on /g' /etc/default/grub
+        sed -i 's/^"GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="intel_iommu=on /g' /etc/default/grub
     elif lscpu -J | grep -q "AMD" >/dev/null 2>&1; then
         echo -e "AMD CPU was detected -> add amd_iommu=on"
-        sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="amd_iommu=on /g' /etc/default/grub
+        sed -i 's/^"GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="amd_iommu=on /g' /etc/default/grub
     fi
 
     grub-mkconfig -o /boot/grub/grub.cfg
@@ -614,7 +662,12 @@ arch-chroot /mnt /bin/bash -e <<EOF
     #                        zsh configuration
     #-------------------------------------------------------------------------
     #"
-#
+
+    chsh -s /bin/zsh
+    echo -e "$password" | sudo -u $username chsh -s /bin/zsh
+    echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
+
+
     #cd /home/$username/
     #mkdir -p /home/$username/.cache
     #chown $username:$username /home/$username/.cache
@@ -623,7 +676,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     #sudo -u $username git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/$username/powerlevel10k
     #ln -s "/home/$username/zsh/.zshrc" /home/$username/.zshrc
     #echo "zsh configured."
-#
+
     ## Make zsh the default shell for the user.
     #chsh -s /bin/zsh "$username" >/dev/null 2>&1
     #echo "zsh made the default shell for user $username"
@@ -652,16 +705,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Get rid of system beep
     rmmod pcspkr
 	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
-
-    echo "creating ~/.config/autostart - required to enable AppArmor notifications"
-    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
-    chown -R $username:$username /home/${username}/.config &>/dev/null
-    chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
-
-    echo "Enabling libvirtd service"
-    systemctl enable --now libvirtd &>/dev/null
-    usermod -G libvirt -a $username
-
+    
     # Installing CyberRe Grub theme
     echo -ne "
     -------------------------------------------------------------------------
@@ -673,7 +717,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "Creating the theme directory..."
     mkdir -p ${THEME_DIR}/${THEME_NAME}
     echo -e "Copying the theme..."
-    git clone https://github.com/khaleeldtxi/archlinux-install-script/
+    git clone https://github.com/khaleeldtxi/archlinux-install-script
     cp -a archlinux-install-script/${THEME_NAME}/* ${THEME_DIR}/${THEME_NAME}
     echo -e "Backing up Grub config..."
     cp -an /etc/default/grub /etc/default/grub.bak
@@ -686,8 +730,26 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Regenerate Grub configuration"
     grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "All set!"
-    echo "CyberRe Grub theme installed."
+    echo "CyberRe Grub theme installed."    
+
+    echo "creating ~/.config/autostart - required to enable AppArmor notifications"
+    mkdir -p -m 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    chown -R $username:$username /home/${username}/.config &>/dev/null
+    chown -R $username:$username /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    chmod 700 /home/${username}/.config/autostart/apparmor-notify.desktop &>/dev/null
+    echo "created ~/.config/autostart"
     
+    # Enabling AppArmor
+    echo "Enabling AppArmor."
+    systemctl enable apparmor &>/dev/null
+    systemctl enable auditd.service &>/dev/null
+    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
+    echo "AppArmor enabled."
+
+    echo "Enabling libvirtd service"
+    systemctl enable libvirtd &>/dev/null
+    usermod -G libvirt -a $username
+
 EOF
 
 
