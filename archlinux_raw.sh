@@ -673,6 +673,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chown -R $username:$username /home/${username}/.config &>/dev/null
     chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
     chmod 700 /home/${username}/.config/autostart &>/dev/null
+    touch /home/${username}/.config/autostart/apparmor-notify.desktop
     echo "created ~/.config/autostart"
     
     # Enabling AppArmor
