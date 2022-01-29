@@ -766,6 +766,6 @@ echo "Done, you may now wish to reboot. Further changes can be done by chrooting
 
 # Run following command after rebooting and installing kdeconnect
 #sudo firewall-cmd --zone=home --add-service kdeconnect --permanent
-#systemctl enable --now virtlogd.socket
-#virsh net-start default
-#virsh net-autostart default
+#sudo systemctl enable --now virtlogd.socket
+#sudo virsh net-start default
+#sudo virsh net-autostart default
