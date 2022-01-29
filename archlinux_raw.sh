@@ -528,7 +528,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Creating GRUB config file."
     grub-mkconfig -o /boot/grub/grub.cfg
 
-        echo -ne "
+    echo -ne "
     -------------------------------------------------------------------------
                         Setting root & user password
     -------------------------------------------------------------------------
