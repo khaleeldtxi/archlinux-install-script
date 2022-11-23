@@ -471,15 +471,23 @@ echo -ne "
 # Configuring the system.
 arch-chroot /mnt /bin/bash -e <<EOF
 
+    # Enable systemd-timesyncd
+    systemctl enable systemd-timesyncd.service
+    
     # Setting up timezone
     ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
     
     # Setting up clock
     hwclock --systohc
        
-    # Generating locales.my keys aren't even on
+    # Generating locales
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+    echo "LANG=\"en_US.UTF-8\"" > /etc/locale.conf
     echo "Generating locales."
     locale-gen &>/dev/null
+    
+    # Set keymap
+    echo "KEYMAP=us" > /etc/vconsole.conf
 
     echo -ne "
     -------------------------------------------------------------------------
@@ -499,6 +507,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
     #sed -i '1 s|^|Server = https://es-mirror.chaotic.cx/$repo/$arch\n\n|' /etc/pacman.d/chaotic-mirrorlist
     pacman -Syyu --noconfirm
     echo "Pacman eye-candy features installed."
+    
+    # Initialize Pacman's keyring
+    pacman-key --init
+    pacman-key --populate
 
 
     echo -ne "
