@@ -55,7 +55,7 @@ iso=$(curl -4 ifconfig.co/country-iso)
 # Update mirrors
 reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
-pacman -S --noconfirm curl btrfs-progs gptfdisk reflector rsync glibc pacman-contrib terminus-font nano which tree
+pacman -S --noconfirm btrfs-progs gptfdisk reflector rsync glibc pacman-contrib terminus-font nano which tree
 
 clear
 
