@@ -8,8 +8,8 @@
 #                    ██║  ██║██║  ██║╚██████╗██║  ██║ 
 #                    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ 
 #-------------------------------------------------------------------------
-#--by Khaleel --inspired by tommytran732, Chris Titus, MatMoul and many others
-#------------------------------------------------------------------------------
+# 				  Automated Arch Btrfs Snapper Installer
+#-------------------------------------------------------------------------
 #"
 
 setfont ter-v22b
@@ -18,18 +18,16 @@ clear
 logo () {
 # This will be shown on every set as user is progressing
 echo -ne "
-------------------------------------------------------------------------------
+-------------------------------------------------------------------------
                      █████╗ ██████╗  ██████╗██╗  ██╗
                     ██╔══██╗██╔══██╗██╔════╝██║  ██║
                     ███████║██████╔╝██║     ███████║ 
                     ██╔══██║██╔══██╗██║     ██╔══██║ 
                     ██║  ██║██║  ██║╚██████╗██║  ██║ 
-                    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝   
-------------------------------------------------------------------------------
-                          --from Khaleel 
-------------------------------------------------------------------------------
-      --inspired by tommytran732, Chris Titus, MatMoul and many others
-------------------------------------------------------------------------------
+                    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ 
+-------------------------------------------------------------------------
+ 				  Automated Arch Btrfs Snapper Installer
+-------------------------------------------------------------------------
 "
 }
 
@@ -39,36 +37,75 @@ timedatectl set-ntp true &>/dev/null
 
 # Setting up mirrors for optimal download
 
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy
+pacman -Sy archlinux-keyring --needed --noconfirm
+sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 
-iso=$(curl -4 ifconfig.co/country-iso)
 echo -ne "
 -------------------------------------------------------------------------
-                    Setting up $iso mirrors for faster downloads
+							Updating Mirrorlist
+				   Setting up $iso mirrors for faster downloads
 -------------------------------------------------------------------------
 "
+iso=$(curl -4 ifconfig.co/country-iso)
 
 # Update mirrors
-#reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
-reflector --verbose --country 'Germany' -l 5 --sort rate --save /etc/pacman.d/mirrorlist 
-sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-pacman -Syy --noconfirm curl pacman-contrib terminus-font reflector
+reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+
+pacman -S --noconfirm curl btrfs-progs gptfdisk reflector rsync glibc pacman-contrib terminus-font nano which tree
 
 clear
 
 userinfo () {
 # Enter username
+
 read -p "Please enter your username: " username
+set_option USERNAME ${username,,} 
+while true; do
+  echo -ne "Please enter your password: \n"
+  read -s password # read password without echo
+
+  echo -ne "Please repeat your password: \n"
+  read -s password2 # read password without echo
+
+  if [ "$password" = "$password2" ]; then
+    set_option PASSWORD $password
+    break
+  else
+    echo -e "\nPasswords do not match. Please try again. \n"
+  fi
+done
+while true; do
+  echo -ne "Please enter your root password: \n"
+  read -s rootpassword # read password without echo
+
+  echo -ne "Please repeat your root password: \n"
+  read -s rootpassword2 # read password without echo
+
+  if [ "$rootpassword" = "$rootpassword2" ]; then
+    set_option ROOTPASSWORD $rootpassword
+    break
+  else
+    echo -e "\nPasswords do not match. Please try again. \n"
+  fi
+done
+read -rep "Please enter your hostname: " nameofmachine
+set_option NAME_OF_MACHINE $nameofmachine
+
+
 
 # Enter password for root & $username
-echo -ne "Please enter your password for $username: \n"
-read -s password # read password without echo
-
-echo -ne "Please enter your password for root account: \n"
-read -s root_password
-
-# Enter hostname
-read -rep "Please enter your hostname: " hostname
+#echo -ne "Please enter your password for $username: \n"
+#read -s password # read password without echo
+#
+#echo -ne "Please enter your password for root account: \n"
+#read -s ROOTPASSWORD
+#
+## Enter hostname
+#read -rep "Please enter your hostname: " hostname
 }
 
 userinfo
@@ -98,6 +135,7 @@ keymap () {
 # These are default key maps as presented in official arch repo archinstall
 echo -ne "
 Please select key board layout from this list
+	-us
     -by
     -ca
     -cf
@@ -124,7 +162,7 @@ Please select key board layout from this list
     -sg
     -ua
     -uk
-    -us
+    
 
 "
 read -p "Your key boards layout:" keymap
@@ -136,6 +174,24 @@ clear
 
 # Enter locale
 read -r -p "Please insert the locale you use (in this format: en_US): " locale
+
+
+loginshell () {
+echo -ne "
+Please select a shell from this list for using with your user (root will still use bash by default)"
+
+options=(bash fish zsh)
+
+select_option $? 4 "${options[@]}"
+shellchoice=${options[$?]}
+
+echo -ne "Your Gui : ${keymap} \n"
+set_option SHELLCHOICE $shellchoice
+}
+
+loginshell
+
+
 
 # Selecting the kernel flavor to install
 kernel_selector () {
@@ -209,15 +265,18 @@ if [[ "$response" =~ ^(yes|y)$ ]]; then
     
     # create partitions
     sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
-    sgdisk -n 2:0:-0     ${DISK} # partition 2 (Root), default start, remaining
+	sgdisk -n 2:0:+512GiB ${DISK} # partition 1 (Home), default start block, 512GiB
+    sgdisk -n 3:0:0     ${DISK} # partition 2 (Root), default start block, remaining
 
     # set partition types
     sgdisk -t 1:ef00 ${DISK}
-    sgdisk -t 2:8300 ${DISK}
+	sgdisk -t 2:8300 ${DISK}
+    sgdisk -t 3:8300 ${DISK}
 
     # label partitions
     sgdisk -c 1:"ESP" ${DISK}
-    sgdisk -c 2:"ROOT" ${DISK}
+	sgdisk -c 2:"HOME" ${DISK}
+    sgdisk -c 3:"ROOT" ${DISK}
 else
     echo "Quitting."
     exit
@@ -234,26 +293,30 @@ partprobe "$DISK"
 
 if [[ "${DISK}" =~ "nvme" ]]; then
     ESP=${DISK}p1
-    BTRFS=${DISK}p2
+	HOME=${DISK}p2
+    ROOT=${DISK}p3
 else
     ESP=${DISK}1
-    BTRFS=${DISK}2
+	HOME=${DISK}2
+    ROOT=${DISK}3
 fi
 
 # Formatting the ESP as FAT32
 echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
-mkfs.fat -F 32 $ESP &>/dev/null
+mkfs.fat -F 32 -n EFI $ESP &>/dev/null
 
-# Formatting the partition as BTRFS
-echo "Formatting the Root partition as BTRFS."
-mkfs.btrfs -L ARCH-ROOT -f -n 32k $BTRFS &>/dev/null
-mount -t btrfs $BTRFS /mnt
+# Formatting the partition as ROOT
+echo "Formatting the Root partition as ROOT."
+mkfs.btrfs -L Arch-Root -f -n 32k $ROOT &>/dev/null
+mkfs.btrfs -L Linux-Home -f -n 32k $HOME &>/dev/null
 
-# Creating BTRFS subvolumes
+mount -t btrfs $ROOT /mnt
+
+# Creating ROOT subvolumes
 
 echo -ne "
 -------------------------------------------------------------------------
-                      Creating BTRFS subvolumes
+                      Creating ROOT subvolumes
 -------------------------------------------------------------------------
 "
 btrfs subvolume create /mnt/@ &>/dev/null
@@ -262,7 +325,6 @@ mkdir /mnt/@/.snapshots/1 &>/dev/null
 btrfs subvolume create /mnt/@/.snapshots/1/snapshot &>/dev/null
 mkdir /mnt/@/boot &>/dev/null
 btrfs subvolume create /mnt/@/boot/grub &>/dev/null
-btrfs subvolume create /mnt/@/home &>/dev/null
 btrfs subvolume create /mnt/@/root &>/dev/null
 btrfs subvolume create /mnt/@/srv &>/dev/null
 mkdir /mnt/@/var &>/dev/null
@@ -286,7 +348,7 @@ chattr +C /mnt/@/var/spool
 chattr +C /mnt/@/var/lib/libvirt/images
 chattr +C /mnt/@/var/lib/machines
 
-#Set the default BTRFS Subvol to Snapshot 1 before pacstrapping
+#Set the default ROOT Subvol to Snapshot 1 before pacstrapping
 btrfs subvolume set-default "$(btrfs subvolume list /mnt | grep "@/.snapshots/1/snapshot" | grep -oP '(?<=ID )[0-9]+')" /mnt
 
 DATE=`date +"%Y-%m-%d %H:%M:%S"`
@@ -311,22 +373,21 @@ echo -ne "
                 Mounting the newly created subvolumes
 -------------------------------------------------------------------------
 "
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $BTRFS /mnt
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $ROOT /mnt
 mkdir -p /mnt/{boot/grub,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines}
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot/grub $BTRFS /mnt/boot/grub
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/root $BTRFS /mnt/root
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/home $BTRFS /mnt/home
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/.snapshots $BTRFS /mnt/.snapshots
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/srv $BTRFS /mnt/srv
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/log $BTRFS /mnt/var/log
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot/grub $ROOT /mnt/boot/grub
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/root $ROOT /mnt/root
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/.snapshots $ROOT /mnt/.snapshots
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/srv $ROOT /mnt/srv
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/log $ROOT /mnt/var/log
 mkdir -p /mnt/var/log/journal
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,subvol=@/var/log/journal $BTRFS /mnt/var/log/journal
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/crash $BTRFS /mnt/var/crash
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/cache $BTRFS /mnt/var/cache
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,subvol=@/var/tmp $BTRFS /mnt/var/tmp
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/spool $BTRFS /mnt/var/spool
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/libvirt/images $BTRFS /mnt/var/lib/libvirt/images
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/machines $BTRFS /mnt/var/lib/machines
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,subvol=@/var/log/journal $ROOT /mnt/var/log/journal
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/crash $ROOT /mnt/var/crash
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/cache $ROOT /mnt/var/cache
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,subvol=@/var/tmp $ROOT /mnt/var/tmp
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/spool $ROOT /mnt/var/spool
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/libvirt/images $ROOT /mnt/var/lib/libvirt/images
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/machines $ROOT /mnt/var/lib/machines
 
 mkdir -p /mnt/efi
 mount -o nodev,nosuid,noexec $ESP /mnt/efi
@@ -339,7 +400,8 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+#pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-network-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak ntfs-3g --noconfirm --needed
 
 # Routing jack2 through PipeWire.
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
@@ -371,7 +433,7 @@ echo "KEYMAP=$keymap" > /mnt/etc/vconsole.conf
 echo "Configuring /etc/mkinitcpio for ZSTD compression."
 sed -i 's,#COMPRESSION="zstd",COMPRESSION="zstd",g' /mnt/etc/mkinitcpio.conf
 
-echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
+echo -e "# Booting with ROOT subvolume\nGRUB_ROOT_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
 
