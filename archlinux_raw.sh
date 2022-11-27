@@ -64,46 +64,15 @@ userinfo () {
 
 read -p "Please enter your username: " username
 
-while true; do
-  echo -ne "Please enter your password: \n"
-  read -s password # read password without echo
+ Enter password for root & $username
+echo -ne "Please enter your password for $username: \n"
+read -s password # read password without echo
 
-  echo -ne "Please repeat your password: \n"
-  read -s password2 # read password without echo
+echo -ne "Please enter your password for root account: \n"
+read -s root_password
 
-  if [ "$password" = "$password2" ]; then
-    break
-  else
-    echo -e "\nPasswords do not match. Please try again. \n"
-  fi
-done
-while true; do
-  echo -ne "Please enter your root password: \n"
-  read -s rootpassword # read password without echo
-
-  echo -ne "Please repeat your root password: \n"
-  read -s rootpassword2 # read password without echo
-
-  if [ "$rootpassword" = "$rootpassword2" ]; then
-    $rootpassword
-    break
-  else
-    echo -e "\nPasswords do not match. Please try again. \n"
-  fi
-done
+# Enter hostname
 read -rep "Please enter your hostname: " hostname
-
-
-
-# Enter password for root & $username
-#echo -ne "Please enter your password for $username: \n"
-#read -s password # read password without echo
-#
-#echo -ne "Please enter your password for root account: \n"
-#read -s ROOTPASSWORD
-#
-## Enter hostname
-#read -rep "Please enter your hostname: " hostname
 }
 
 userinfo
@@ -133,7 +102,6 @@ keymap () {
 # These are default key maps as presented in official arch repo archinstall
 echo -ne "
 Please select key board layout from this list
-    -us
     -by
     -ca
     -cf
@@ -160,8 +128,7 @@ Please select key board layout from this list
     -sg
     -ua
     -uk
-    
-
+    -us
 "
 read -p "Your key boards layout:" keymap
 }
