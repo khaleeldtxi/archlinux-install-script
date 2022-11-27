@@ -414,9 +414,9 @@ curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/sysctl.d/
 chmod 600 /mnt/etc/sysctl.d/*
 
 # IO udev rules
-curl https://gitlab.com/garuda-linux/themes-and-settings/settings/garuda-common-settings/-/raw/master/etc/udev/rules.d/50-sata.rules > /mnt/etc/udev/rules.d/50-sata.rules
-curl https://gitlab.com/garuda-linux/themes-and-settings/settings/garuda-common-settings/-/raw/master/etc/udev/rules.d/60-ioschedulers.rules > /etc/udev/rules.d/60-ioschedulers.rules
-chmod 600 /mnt/etc/udev/rules.d/*
+#curl https://gitlab.com/garuda-linux/themes-and-settings/settings/garuda-common-settings/-/raw/master/etc/udev/rules.d/50-sata.rules > /mnt/etc/udev/rules.d/50-sata.rules
+#curl https://gitlab.com/garuda-linux/themes-and-settings/settings/garuda-common-settings/-/raw/master/etc/udev/rules.d/60-ioschedulers.rules > /etc/udev/rules.d/60-ioschedulers.rules
+#chmod 600 /mnt/etc/udev/rules.d/*
 
 # Remove nullok from system-auth
 sed -i 's/nullok//g' /mnt/etc/pam.d/system-auth
