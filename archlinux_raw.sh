@@ -176,22 +176,6 @@ clear
 read -r -p "Please insert the locale you use (in this format: en_US): " locale
 
 
-loginshell () {
-echo -ne "
-Please select a shell from this list for using with your user (root will still use bash by default)"
-
-options=(bash fish zsh)
-
-select_option $? 4 "${options[@]}"
-shellchoice=${options[$?]}
-
-echo -ne "Your Gui : ${keymap} \n"
-set_option SHELLCHOICE $shellchoice
-}
-
-loginshell
-
-
 
 # Selecting the kernel flavor to install
 kernel_selector () {
@@ -265,17 +249,17 @@ if [[ "$response" =~ ^(yes|y)$ ]]; then
     
     # create partitions
     sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
-	sgdisk -n 2:0:+512GiB ${DISK} # partition 1 (Home), default start block, 512GiB
+    sgdisk -n 2:0:+512GiB ${DISK} # partition 1 (Home), default start block, 512GiB
     sgdisk -n 3:0:0     ${DISK} # partition 2 (Root), default start block, remaining
 
     # set partition types
     sgdisk -t 1:ef00 ${DISK}
-	sgdisk -t 2:8300 ${DISK}
+    sgdisk -t 2:8300 ${DISK}
     sgdisk -t 3:8300 ${DISK}
 
     # label partitions
     sgdisk -c 1:"ESP" ${DISK}
-	sgdisk -c 2:"HOME" ${DISK}
+    sgdisk -c 2:"HOME" ${DISK}
     sgdisk -c 3:"ROOT" ${DISK}
 else
     echo "Quitting."
@@ -293,11 +277,11 @@ partprobe "$DISK"
 
 if [[ "${DISK}" =~ "nvme" ]]; then
     ESP=${DISK}p1
-	HOME=${DISK}p2
+    HOME=${DISK}p2
     ROOT=${DISK}p3
 else
     ESP=${DISK}1
-	HOME=${DISK}2
+    HOME=${DISK}2
     ROOT=${DISK}3
 fi
 
@@ -374,6 +358,7 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $ROOT /mnt
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $HOME /mnt/home
 mkdir -p /mnt/{boot/grub,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines}
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot/grub $ROOT /mnt/boot/grub
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/root $ROOT /mnt/root
