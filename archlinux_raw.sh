@@ -64,7 +64,7 @@ userinfo () {
 
 read -p "Please enter your username: " username
 
- Enter password for root & $username
+# Enter password for root & $username
 echo -ne "Please enter your password for $username: \n"
 read -s password # read password without echo
 
