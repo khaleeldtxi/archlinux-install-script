@@ -7,8 +7,8 @@
 #                    ██╔══██║██╔══██╗██║     ██╔══██║ 
 #                    ██║  ██║██║  ██║╚██████╗██║  ██║ 
 #                    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ 
-#-------------------------------------------------------------------------
-# 				  Automated Arch Btrfs Snapper Installer
+#---------------------------------------------------------------------
+#		Automated Arch Btrfs Snapper Installer
 #-------------------------------------------------------------------------
 #"
 
@@ -26,7 +26,7 @@ echo -ne "
                     ██║  ██║██║  ██║╚██████╗██║  ██║ 
                     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ 
 -------------------------------------------------------------------------
- 				  Automated Arch Btrfs Snapper Installer
+ 		 Automated Arch Btrfs Snapper Installer
 -------------------------------------------------------------------------
 "
 }
@@ -46,8 +46,8 @@ cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 
 echo -ne "
 -------------------------------------------------------------------------
-							Updating Mirrorlist
-				   Setting up $iso mirrors for faster downloads
+			Updating Mirrorlist
+		 Setting up $iso mirrors for faster downloads
 -------------------------------------------------------------------------
 "
 iso=$(curl -4 ifconfig.co/country-iso)
@@ -63,7 +63,7 @@ userinfo () {
 # Enter username
 
 read -p "Please enter your username: " username
-set_option USERNAME ${username,,} 
+
 while true; do
   echo -ne "Please enter your password: \n"
   read -s password # read password without echo
@@ -72,7 +72,6 @@ while true; do
   read -s password2 # read password without echo
 
   if [ "$password" = "$password2" ]; then
-    set_option PASSWORD $password
     break
   else
     echo -e "\nPasswords do not match. Please try again. \n"
@@ -86,14 +85,13 @@ while true; do
   read -s rootpassword2 # read password without echo
 
   if [ "$rootpassword" = "$rootpassword2" ]; then
-    set_option ROOTPASSWORD $rootpassword
+    $rootpassword
     break
   else
     echo -e "\nPasswords do not match. Please try again. \n"
   fi
 done
-read -rep "Please enter your hostname: " nameofmachine
-set_option NAME_OF_MACHINE $nameofmachine
+read -rep "Please enter your hostname: " hostname
 
 
 
@@ -135,7 +133,7 @@ keymap () {
 # These are default key maps as presented in official arch repo archinstall
 echo -ne "
 Please select key board layout from this list
-	-us
+    -us
     -by
     -ca
     -cf
@@ -174,7 +172,6 @@ clear
 
 # Enter locale
 read -r -p "Please insert the locale you use (in this format: en_US): " locale
-
 
 
 # Selecting the kernel flavor to install
@@ -358,8 +355,8 @@ echo -ne "
 -------------------------------------------------------------------------
 "
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $ROOT /mnt
-mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $HOME /mnt/home
 mkdir -p /mnt/{boot/grub,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines}
+mount -o lazytime,relatime,compress=zstd,space_cache=v2,ssd $HOME /mnt/home
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,noexec,subvol=@/boot/grub $ROOT /mnt/boot/grub
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodev,nosuid,subvol=@/root $ROOT /mnt/root
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,subvol=@/.snapshots $ROOT /mnt/.snapshots
