@@ -64,7 +64,7 @@ userinfo () {
 
 read -p "Please enter your username: " username
 
-# Enter password for root & $username
+ Enter password for root & $username
 echo -ne "Please enter your password for $username: \n"
 read -s password # read password without echo
 
@@ -350,6 +350,7 @@ echo -ne "
 
 # Pacstrap (setting up a base sytem onto the new root)
 #pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+
 pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-network-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak ntfs-3g --noconfirm --needed
 
 # Routing jack2 through PipeWire.
@@ -721,7 +722,7 @@ echo -ne "
                      Enable AppArmor notifications
 -------------------------------------------------------------------------
 "
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+bash -c "cat > /home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
 [Desktop Entry]
 Type=Application
 Name=AppArmor Notify
@@ -734,10 +735,10 @@ EOF
 
 
 # bypass sudo password prompt
-echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /mnt/etc/sudoers.d/00_nopasswd
+echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
 
 # bypass polkit password prompt
-cat >> /mnt/etc/polkit-1/rules.d/49-nopasswd_global.rules <<-'EOF'
+cat >> /etc/polkit-1/rules.d/49-nopasswd_global.rules <<-'EOF'
 /* Allow members of the wheel group to execute any actions
 * without password authentication, similar to "sudo NOPASSWD:"
 */
