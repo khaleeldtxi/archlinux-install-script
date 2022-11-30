@@ -519,26 +519,26 @@ echo -ne "
 arch-chroot /mnt /bin/bash -e <<EOF
 
     # Enable systemd-timesyncd
-	echo "Enable systemd-timesyncd"
+    echo "Enable systemd-timesyncd"
     systemctl enable systemd-timesyncd.service
     
     # Setting up timezone
-	echo "Setting up timezone"
+    echo "Setting up timezone"
     ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
     
     # Setting up clock
-	echo "Setting up clock"
+    echo "Setting up clock"
     hwclock --systohc
        
     # Generating locales
-	echo "Generating locales"
+    echo "Generating locales"
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
     echo "LANG=\"en_US.UTF-8\"" > /etc/locale.conf
     echo "Generating locales."
     locale-gen &>/dev/null
     
     # Set keymap
-	echo "Set keymap"
+    echo "Set keymap"
     echo "KEYMAP=us" > /etc/vconsole.conf
 
     echo -ne "
@@ -552,11 +552,11 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
     sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
     sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
-	pacman -Syyu --noconfirm
-	echo "Pacman eye-candy features installed."
-	
-	#echo "Installing chaotic-aur"
-   # pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+    pacman -Syyu --noconfirm
+    echo "Pacman eye-candy features installed."
+    
+    #echo "Installing chaotic-aur"
+    #pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
     #pacman-key --lsign-key FBA220DFC880C036
     #pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
     #echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" >> /etc/pacman.conf
@@ -590,7 +590,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB
-	echo "Installing GRUB"
+    echo "Installing GRUB"
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
     
     # Creating grub config file.
@@ -606,7 +606,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Giving wheel user sudo access
     echo -e "$root_password\n$root_password" | passwd root
     usermod -aG wheel root
-    useradd -m -G wheel -s /bin/bash $username
+    useradd -m -G wheel,libvirt -s /bin/zsh $username
     usermod -a -G wheel "$username" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
     echo -e "$password\n$password" | passwd $username
     groupadd -r audit
@@ -621,11 +621,11 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "\n#GTK_USE_PORTAL=1\n" >> /etc/environment
 
     # Enabling audit service
-	echo "Enabling audit service"
+    echo "Enabling audit service"
     systemctl enable auditd &>/dev/null
 
     # Enabling auto-trimming service
-	echo "Enabling auto-trimming service"
+    echo "Enabling auto-trimming service"
     systemctl enable fstrim.timer &>/dev/null
 
     # Enabling NetworkManager
@@ -677,8 +677,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     fi
 
     grub-mkconfig -o /boot/grub/grub.cfg
-	
-	echo "creating ~/.config/autostart - required to enable AppArmor notifications"
+    
+    echo "creating ~/.config/autostart - required to enable AppArmor notifications"
     mkdir -p -m 700 /home/${username}/.config/autostart &>/dev/null
     chown -R $username:$username /home/${username}/.config &>/dev/null
     chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
@@ -730,8 +730,25 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Get rid of system beep
     rmmod pcspkr
-	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
+    echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
+    #Changing The timeline auto-snap
+    sed -i 's|QGROUP=""|QGROUP="1/0"|' /etc/snapper/configs/root
+    sed -i 's|NUMBER_LIMIT="50"|NUMBER_LIMIT="10-35"|' /etc/snapper/configs/root
+    sed -i 's|NUMBER_LIMIT_IMPORTANT="50"|NUMBER_LIMIT_IMPORTANT="10-25"|' /etc/snapper/configs/root
+    sed -i 's|TIMELINE_LIMIT_HOURLY="10"|TIMELINE_LIMIT_HOURLY="3"|' /etc/snapper/configs/root
+    sed -i 's|TIMELINE_LIMIT_DAILY="10"|TIMELINE_LIMIT_DAILY="3"|' /etc/snapper/configs/root
+    sed -i 's|TIMELINE_LIMIT_WEEKLY="0"|TIMELINE_LIMIT_WEEKLY="2"|' /etc/snapper/configs/root
+    sed -i 's|TIMELINE_LIMIT_MONTHLY="10"|TIMELINE_LIMIT_MONTHLY="2"|' /etc/snapper/configs/root
+    sed -i 's|TIMELINE_LIMIT_YEARLY="10"|TIMELINE_LIMIT_YEARLY="0"|' /etc/snapper/configs/root
     
+    #activating the auto-cleanup
+    echo "Activating the auto-cleanup."
+    SCRUB=$(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-uuid/${ROOT})
+    systemctl enable ${SCRUB}
+    echo "Activating snapper-timeline & snapper-cleanup."
+    systemctl enable snapper-timeline.timer
+    systemctl enable snapper-cleanup.timer
+
     # Installing CyberRe Grub theme
     echo -ne "
     -------------------------------------------------------------------------
