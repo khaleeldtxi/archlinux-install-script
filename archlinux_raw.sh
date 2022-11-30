@@ -338,8 +338,8 @@ mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=a
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/libvirt/images $ROOT /mnt/var/lib/libvirt/images
 mount -o lazytime,relatime,compress=zstd,space_cache=v2,autodefrag,ssd,discard=async,nodatacow,nodev,nosuid,noexec,subvol=@/var/lib/machines $ROOT /mnt/var/lib/machines
 
-mkdir -p /mnt/efi
-mount -o nodev,nosuid,noexec $ESP /mnt/efi
+mkdir -p /mnt/boot/efi
+mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 
 
 echo -ne "
@@ -400,8 +400,15 @@ curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/g
 # Enabling IOMMU
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_enable_iommu.cfg >> /mnt/etc/grub.d/40_enable_iommu
 
+# Enabling NTS
+curl https://raw.githubusercontent.com/GrapheneOS/infrastructure/main/chrony.conf >> /mnt/etc/chrony.conf
+
 # Setting GRUB configuration file permissions
 chmod 755 /mnt/etc/grub.d/*
+
+# Configure AppArmor Parser caching
+sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
+sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Blacklisting kernel modules
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/modprobe.d/30_security-misc.conf >> /mnt/etc/modprobe.d/30_security-misc.conf
@@ -546,7 +553,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB
-    grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
     
     # Creating grub config file.
     echo "Creating GRUB config file."
@@ -722,7 +729,7 @@ echo -ne "
                      Enable AppArmor notifications
 -------------------------------------------------------------------------
 "
-bash -c "cat > /home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
 [Desktop Entry]
 Type=Application
 Name=AppArmor Notify
@@ -732,13 +739,32 @@ Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
 StartupNotify=false
 NoDisplay=true
 EOF
+chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
+arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
+# Enabling AppArmor.
+echo "Enabling AppArmor."
+systemctl enable apparmor --root=/mnt &>/dev/null
+
+# Enabling Firewalld.
+echo "Enabling Firewalld."
+systemctl enable firewalld --root=/mnt &>/dev/nullReflector
+
+# Enabling systemd-oomd.
+echo "Enabling systemd-oomd."
+systemctl enable systemd-oomd --root=/mnt &>/dev/null
+
+# Disabling systemd-timesyncd
+systemctl disable systemd-timesyncd --root=/mnt &>/dev/null
+
+# Enabling chronyd
+systemctl enable chronyd --root=/mnt &>/dev/null
 
 # bypass sudo password prompt
-echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /etc/sudoers.d/00_nopasswd
+echo -e "root ALL=(ALL) NOPASSWD: ALL\n%wheel ALL=(ALL) NOPASSWD: ALL\n" > /mnt/etc/sudoers.d/00_nopasswd
 
 # bypass polkit password prompt
-cat >> /etc/polkit-1/rules.d/49-nopasswd_global.rules <<-'EOF'
+cat >> /mnt/etc/polkit-1/rules.d/49-nopasswd_global.rules <<-'EOF'
 /* Allow members of the wheel group to execute any actions
 * without password authentication, similar to "sudo NOPASSWD:"
 */
