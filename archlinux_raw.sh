@@ -254,7 +254,7 @@ echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
 mkfs.fat -F 32 -n EFI $ESP &>/dev/null
 
 # Formatting the partition as ROOT
-echo "Formatting the Root partition as ROOT."
+echo "Formatting the Root & Home partition as btrfs."
 mkfs.btrfs -L Arch-Root -f -n 32k $ROOT &>/dev/null
 mkfs.btrfs -L Linux-Home -f -n 32k $HOME &>/dev/null
 
