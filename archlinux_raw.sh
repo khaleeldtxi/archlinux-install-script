@@ -349,11 +349,16 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-#pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm --noconfirm --needed
+#pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-graphics-meta kde-multimedia-meta kde-network-meta kde-pim-meta kde-sdk-meta kde-system-meta kde-utilities-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm chronyd --noconfirm --needed
 
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-network-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak ntfs-3g --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-network-meta plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak ntfs-3g chronyd --noconfirm --needed
 
-# Routing jack2 through PipeWire.
+# Routing jack2 through PipeWire
+echo -ne "
+-------------------------------------------------------------------------
+                      Routing jack2 through PipeWire
+-------------------------------------------------------------------------
+"
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
 
 # Generating /etc/fstab
@@ -362,6 +367,11 @@ genfstab -U -p /mnt >> /mnt/etc/fstab
 sed -i 's#,subvolid=258,subvol=/@/.snapshots/1/snapshot##g' /mnt/etc/fstab
 
 # Setting hostname
+echo -ne "
+-------------------------------------------------------------------------
+                     	 Setting hostname
+-------------------------------------------------------------------------
+"
 echo "$hostname" > /mnt/etc/hostname
 
 # Setting hosts file
@@ -373,10 +383,12 @@ cat > /mnt/etc/hosts <<EOF
 EOF
 
 # Setting up locales
+echo "Setting up locales"
 echo "$locale.UTF-8 UTF-8"  > /mnt/etc/locale.gen
 echo "LANG=$locale.UTF-8" > /mnt/etc/locale.conf
 
 # Setting up keyboard layout.
+echo "Setting up keyboard layout"
 echo "KEYMAP=$keymap" > /mnt/etc/vconsole.conf
 
 # Configuring /etc/mkinitcpio.conf
@@ -388,33 +400,42 @@ sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
 
 # Configure AppArmor Parser caching
+echo "Configure AppArmor Parser caching"
 sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
 sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Enabling CPU Mitigations
+echo "Enabling CPU Mitigations"
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_cpu_mitigations.cfg >> /mnt/etc/grub.d/40_cpu_mitigations
 
 # Distrusting the CPU
+echo "Distrusting the CPU"
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_distrust_cpu.cfg >> /mnt/etc/grub.d/40_distrust_cpu
 
 # Enabling IOMMU
+echo "Enabling IOMMU"
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_enable_iommu.cfg >> /mnt/etc/grub.d/40_enable_iommu
 
 # Enabling NTS
+echo "Enabling NTS"
 curl https://raw.githubusercontent.com/GrapheneOS/infrastructure/main/chrony.conf >> /mnt/etc/chrony.conf
 
 # Setting GRUB configuration file permissions
+echo "Setting GRUB configuration file permissions"
 chmod 755 /mnt/etc/grub.d/*
 
 # Configure AppArmor Parser caching
+echo "Configure AppArmor Parser caching"
 sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
 sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Blacklisting kernel modules
+echo "Blacklisting kernel modules"
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/modprobe.d/30_security-misc.conf >> /mnt/etc/modprobe.d/30_security-misc.conf
 chmod 600 /mnt/etc/modprobe.d/*
 
 # Security kernel settings
+echo "Setting: Security kernel settings"
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/sysctl.d/30_security-misc.conf >> /mnt/etc/sysctl.d/30_security-misc.conf
 sed -i 's/kernel.yama.ptrace_scope=2/kernel.yama.ptrace_scope=3/g' /mnt/etc/sysctl.d/30_security-misc.conf
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/sysctl.d/30_silent-kernel-printk.conf >> /mnt/etc/sysctl.d/30_silent-kernel-printk.conf
@@ -426,13 +447,16 @@ chmod 600 /mnt/etc/sysctl.d/*
 #chmod 600 /mnt/etc/udev/rules.d/*
 
 # Remove nullok from system-auth
+echo "Remove nullok from system-auth"
 sed -i 's/nullok//g' /mnt/etc/pam.d/system-auth
 
 # Disable coredump
+echo "Disable coredump"
 echo "* hard core 0" >> /mnt/etc/security/limits.conf
 
 
 # Disable su for non-wheel users
+echo "Disable su for non-wheel users"
 bash -c 'cat > /mnt/etc/pam.d/su' <<-'EOF'
 #%PAM-1.0
 auth		sufficient	pam_rootok.so
@@ -446,6 +470,7 @@ session		required	pam_unix.so
 EOF
 
 # ZRAM configuration
+echo "ZRAM configuration"
 bash -c 'cat > /mnt/etc/systemd/zram-generator.conf' <<-'EOF'
 [zram0]
 zram-fraction = 1
@@ -453,6 +478,7 @@ max-zram-size = 8192
 EOF
 
 # Randomize Mac Address
+echo "Randomize Mac Address"
 bash -c 'cat > /mnt/etc/NetworkManager/conf.d/00-macrandomize.conf' <<-'EOF'
 [device]
 wifi.scan-rand-mac-address=yes
@@ -465,6 +491,7 @@ EOF
 chmod 600 /mnt/etc/NetworkManager/conf.d/00-macrandomize.conf
 
 # Disable Connectivity Check.
+echo "Disable Connectivity Check"
 bash -c 'cat > /mnt/etc/NetworkManager/conf.d/20-connectivity.conf' <<-'EOF'
 [connectivity]
 uri=http://www.archlinux.org/check_network_status.txt
@@ -474,6 +501,7 @@ EOF
 chmod 600 /mnt/etc/NetworkManager/conf.d/20-connectivity.conf
 
 # Enable IPv6 privacy extensions
+echo "Enable IPv6 privacy extensions"
 bash -c 'cat > /mnt/etc/NetworkManager/conf.d/ip6-privacy.conf' <<-'EOF'
 [connection]
 ipv6.ip6-privacy=2
@@ -491,21 +519,26 @@ echo -ne "
 arch-chroot /mnt /bin/bash -e <<EOF
 
     # Enable systemd-timesyncd
+	echo "Enable systemd-timesyncd"
     systemctl enable systemd-timesyncd.service
     
     # Setting up timezone
+	echo "Setting up timezone"
     ln -sf /usr/share/zoneinfo/$time_zone /etc/localtime &>/dev/null
     
     # Setting up clock
+	echo "Setting up clock"
     hwclock --systohc
        
     # Generating locales
+	echo "Generating locales"
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
     echo "LANG=\"en_US.UTF-8\"" > /etc/locale.conf
     echo "Generating locales."
     locale-gen &>/dev/null
     
     # Set keymap
+	echo "Set keymap"
     echo "KEYMAP=us" > /etc/vconsole.conf
 
     echo -ne "
@@ -519,13 +552,17 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
     sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
     sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
-    #pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-    #pacman-key --lsign-key FBA220DFC880C036
-    #pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
-    #echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" >> /etc/pacman.conf
+	pacman -Syyu --noconfirm
+	echo "Pacman eye-candy features installed."
+	
+	echo "Installing chaotic-aur"
+    pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+    pacman-key --lsign-key FBA220DFC880C036
+    pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+    echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" >> /etc/pacman.conf
     #sed -i '1 s|^|Server = https://es-mirror.chaotic.cx/$repo/$arch\n\n|' /etc/pacman.d/chaotic-mirrorlist
     pacman -Syyu --noconfirm
-    echo "Pacman eye-candy features installed."
+    echo "chaotic-aur installed."
     
     # Initialize Pacman's keyring
     pacman-key --init
@@ -553,6 +590,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB
+	echo "Installing GRUB"
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt btrfs"
     
     # Creating grub config file.
@@ -583,9 +621,11 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "\n#GTK_USE_PORTAL=1\n" >> /etc/environment
 
     # Enabling audit service
+	echo "Enabling audit service"
     systemctl enable auditd &>/dev/null
 
     # Enabling auto-trimming service
+	echo "Enabling auto-trimming service"
     systemctl enable fstrim.timer &>/dev/null
 
     # Enabling NetworkManager
@@ -637,6 +677,25 @@ arch-chroot /mnt /bin/bash -e <<EOF
     fi
 
     grub-mkconfig -o /boot/grub/grub.cfg
+	
+	echo "creating ~/.config/autostart - required to enable AppArmor notifications"
+    mkdir -p -m 700 /home/${username}/.config/autostart &>/dev/null
+    chown -R $username:$username /home/${username}/.config &>/dev/null
+    chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
+    chmod 700 /home/${username}/.config/autostart &>/dev/null
+    touch /home/${username}/.config/autostart/apparmor-notify.desktop
+    echo "created ~/.config/autostart"
+    
+    # Enabling AppArmor
+    echo "Enabling AppArmor."
+    systemctl enable apparmor &>/dev/null
+    systemctl enable auditd.service &>/dev/null
+    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
+    echo "AppArmor enabled."
+
+    echo "Enabling libvirtd service"
+    systemctl enable libvirtd &>/dev/null
+    usermod -G libvirt -a $username
 
     
     #echo -ne "
@@ -698,25 +757,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "All set!"
     echo "CyberRe Grub theme installed."    
-
-    echo "creating ~/.config/autostart - required to enable AppArmor notifications"
-    mkdir -p -m 700 /home/${username}/.config/autostart &>/dev/null
-    chown -R $username:$username /home/${username}/.config &>/dev/null
-    chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
-    chmod 700 /home/${username}/.config/autostart &>/dev/null
-    touch /home/${username}/.config/autostart/apparmor-notify.desktop
-    echo "created ~/.config/autostart"
     
-    # Enabling AppArmor
-    echo "Enabling AppArmor."
-    systemctl enable apparmor &>/dev/null
-    systemctl enable auditd.service &>/dev/null
-    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
-    echo "AppArmor enabled."
-
-    echo "Enabling libvirtd service"
-    systemctl enable libvirtd &>/dev/null
-    usermod -G libvirt -a $username
 
 EOF
 
@@ -746,18 +787,12 @@ arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 echo "Enabling AppArmor."
 systemctl enable apparmor --root=/mnt &>/dev/null
 
-# Enabling Firewalld.
-echo "Enabling Firewalld."
-systemctl enable firewalld --root=/mnt &>/dev/nullReflector
-
-# Enabling systemd-oomd.
-echo "Enabling systemd-oomd."
-systemctl enable systemd-oomd --root=/mnt &>/dev/null
-
 # Disabling systemd-timesyncd
+echo "Disabling systemd-timesyncd"
 systemctl disable systemd-timesyncd --root=/mnt &>/dev/null
 
 # Enabling chronyd
+echo "Enabling chronyd"
 systemctl enable chronyd --root=/mnt &>/dev/null
 
 # bypass sudo password prompt
