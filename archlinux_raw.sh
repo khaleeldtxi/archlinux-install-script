@@ -746,10 +746,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
 	sed -i 's|TIMELINE_LIMIT_MONTHLY="10"|TIMELINE_LIMIT_MONTHLY="2"|' /etc/snapper/configs/root
 	sed -i 's|TIMELINE_LIMIT_YEARLY="10"|TIMELINE_LIMIT_YEARLY="0"|' /etc/snapper/configs/root
 	
-	#activating the auto-cleanup
-	echo "Activating the auto-cleanup."
-	SCRUB=$(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-label/ROOT)
-	systemctl enable $SCRUB
 	systemctl enable snapper-timeline.timer
 	systemctl enable snapper-cleanup.timer
 
@@ -779,8 +775,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo -e "All set!"
     echo "CyberRe Grub theme installed."    
     
-
-EOF
+    
+  EOF
 
 
 
@@ -875,3 +871,7 @@ echo "Done, you may now wish to reboot. Further changes can be done by chrooting
 #sudo systemctl enable --now virtlogd.socket
 #sudo virsh net-start default
 #sudo virsh net-autostart default
+#activating the auto-cleanup
+#echo "Activating the auto-cleanup."
+#SCRUB=$(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-label/ROOT)
+#systemctl enable $SCRUB
