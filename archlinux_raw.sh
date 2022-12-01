@@ -723,7 +723,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
     cd paru-bin/ || exit
     sudo -u $username makepkg --noconfirm -si
-    cd "$HOME" || exit
+    cd /home/$username/ || exit
     sudo -u $username paru --noconfirm -Syu
     sed -i '$ d' /etc/sudoers
     echo "paru installed."
