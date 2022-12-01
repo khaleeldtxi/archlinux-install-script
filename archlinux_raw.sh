@@ -606,12 +606,14 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Giving wheel user sudo access
     echo -e "$root_password\n$root_password" | passwd root
     usermod -aG wheel root
-	groupadd -r libvirt
+    usermod -aG wheel $username
+    groupadd -r libvirt
     gpasswd -a $username libvirt
-    usermod -a -G wheel,libvirt -s /bin/zsh $username
+    usermod -aG libvirt -s /bin/zsh $username
     usermod -a -G wheel "$username" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
     echo -e "$password\n$password" | passwd $username
     groupadd -r audit
+    usermod -aG audit $username
     gpasswd -a $username audit
     sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
     echo "$username ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
