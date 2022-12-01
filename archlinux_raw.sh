@@ -748,7 +748,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 	
 	#activating the auto-cleanup
 	echo "Activating the auto-cleanup."
-	SCRUB=(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-label/ROOT)
+	SCRUB=$(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-label/ROOT)
 	systemctl enable $SCRUB
 	systemctl enable snapper-timeline.timer
 	systemctl enable snapper-cleanup.timer
