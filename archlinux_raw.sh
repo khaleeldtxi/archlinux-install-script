@@ -254,7 +254,7 @@ echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
 mkfs.fat -F 32 -n EFI $ESP &>/dev/null
 
 # Formatting the partition as ROOT
-echo "Formatting the Root & Home partition as btrfs."
+echo "Formatting the Root partition as ROOT."
 mkfs.btrfs -L Arch-Root -f -n 32k $ROOT &>/dev/null
 mkfs.btrfs -L Linux-Home -f -n 32k $HOME &>/dev/null
 
@@ -406,15 +406,15 @@ sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmo
 
 # Enabling CPU Mitigations
 echo "Enabling CPU Mitigations"
-curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_cpu_mitigations.cfg >> /mnt/etc/grub.d/40_cpu_mitigations
+curl https://raw.githubusercontent.com/Kicksecure/security-misc/master/etc/default/grub.d/40_cpu_mitigations.cfg >> /mnt/etc/grub.d/40_cpu_mitigations
 
 # Distrusting the CPU
 echo "Distrusting the CPU"
-curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_distrust_cpu.cfg >> /mnt/etc/grub.d/40_distrust_cpu
+curl https://raw.githubusercontent.com/Kicksecure/security-misc/master/etc/default/grub.d/40_distrust_cpu.cfg >> /mnt/etc/grub.d/40_distrust_cpu
 
 # Enabling IOMMU
 echo "Enabling IOMMU"
-curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_enable_iommu.cfg >> /mnt/etc/grub.d/40_enable_iommu
+curl https://raw.githubusercontent.com/Kicksecure/security-misc/master/etc/default/grub.d/40_enable_iommu.cfg >> /mnt/etc/grub.d/40_enable_iommu
 
 # Enabling NTS
 echo "Enabling NTS"
@@ -431,14 +431,14 @@ sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmo
 
 # Blacklisting kernel modules
 echo "Blacklisting kernel modules"
-curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/modprobe.d/30_security-misc.conf >> /mnt/etc/modprobe.d/30_security-misc.conf
+curl https://raw.githubusercontent.com/Kicksecure/security-misc/master/etc/modprobe.d/30_security-misc.conf >> /mnt/etc/modprobe.d/30_security-misc.conf
 chmod 600 /mnt/etc/modprobe.d/*
 
 # Security kernel settings
 echo "Setting: Security kernel settings"
-curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/sysctl.d/30_security-misc.conf >> /mnt/etc/sysctl.d/30_security-misc.conf
+curl https://raw.githubusercontent.com/Kicksecure/security-misc/master/etc/sysctl.d/30_security-misc.conf >> /mnt/etc/sysctl.d/30_security-misc.conf
 sed -i 's/kernel.yama.ptrace_scope=2/kernel.yama.ptrace_scope=3/g' /mnt/etc/sysctl.d/30_security-misc.conf
-curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/sysctl.d/30_silent-kernel-printk.conf >> /mnt/etc/sysctl.d/30_silent-kernel-printk.conf
+curl https://raw.githubusercontent.com/Kicksecure/security-misc/master/etc/sysctl.d/30_silent-kernel-printk.conf >> /mnt/etc/sysctl.d/30_silent-kernel-printk.conf
 chmod 600 /mnt/etc/sysctl.d/*
 
 # IO udev rules
@@ -605,9 +605,9 @@ arch-chroot /mnt /bin/bash -e <<EOF
     
     # Giving wheel user sudo access
     echo -e "$root_password\n$root_password" | passwd root
-    groupadd -r libvirt
-    gpasswd -a $username libvirt
     usermod -aG wheel root
+	groupadd -r libvirt
+    gpasswd -a $username libvirt
     useradd -m -G wheel,libvirt -s /bin/zsh $username
     usermod -a -G wheel "$username" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
     echo -e "$password\n$password" | passwd $username
@@ -732,24 +732,24 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Get rid of system beep
     rmmod pcspkr
-    echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
-    #Changing The timeline auto-snap
-    sed -i 's|QGROUP=""|QGROUP="1/0"|' /etc/snapper/configs/root
-    sed -i 's|NUMBER_LIMIT="50"|NUMBER_LIMIT="10-35"|' /etc/snapper/configs/root
-    sed -i 's|NUMBER_LIMIT_IMPORTANT="50"|NUMBER_LIMIT_IMPORTANT="10-25"|' /etc/snapper/configs/root
-    sed -i 's|TIMELINE_LIMIT_HOURLY="10"|TIMELINE_LIMIT_HOURLY="3"|' /etc/snapper/configs/root
-    sed -i 's|TIMELINE_LIMIT_DAILY="10"|TIMELINE_LIMIT_DAILY="3"|' /etc/snapper/configs/root
-    sed -i 's|TIMELINE_LIMIT_WEEKLY="0"|TIMELINE_LIMIT_WEEKLY="2"|' /etc/snapper/configs/root
-    sed -i 's|TIMELINE_LIMIT_MONTHLY="10"|TIMELINE_LIMIT_MONTHLY="2"|' /etc/snapper/configs/root
-    sed -i 's|TIMELINE_LIMIT_YEARLY="10"|TIMELINE_LIMIT_YEARLY="0"|' /etc/snapper/configs/root
+	echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
     
-    #activating the auto-cleanup
-    echo "Activating the auto-cleanup."
-    SCRUB=$(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-uuid/${ROOT})
-    systemctl enable ${SCRUB}
-    echo "Activating snapper-timeline & snapper-cleanup."
-    systemctl enable snapper-timeline.timer
-    systemctl enable snapper-cleanup.timer
+	#Changing The timeline auto-snap
+	sed -i 's|QGROUP=""|QGROUP="1/0"|' /etc/snapper/configs/root
+	sed -i 's|NUMBER_LIMIT="50"|NUMBER_LIMIT="10-35"|' /etc/snapper/configs/root
+	sed -i 's|NUMBER_LIMIT_IMPORTANT="50"|NUMBER_LIMIT_IMPORTANT="10-25"|' /etc/snapper/configs/root
+	sed -i 's|TIMELINE_LIMIT_HOURLY="10"|TIMELINE_LIMIT_HOURLY="3"|' /etc/snapper/configs/root
+	sed -i 's|TIMELINE_LIMIT_DAILY="10"|TIMELINE_LIMIT_DAILY="3"|' /etc/snapper/configs/root
+	sed -i 's|TIMELINE_LIMIT_WEEKLY="0"|TIMELINE_LIMIT_WEEKLY="2"|' /etc/snapper/configs/root
+	sed -i 's|TIMELINE_LIMIT_MONTHLY="10"|TIMELINE_LIMIT_MONTHLY="2"|' /etc/snapper/configs/root
+	sed -i 's|TIMELINE_LIMIT_YEARLY="10"|TIMELINE_LIMIT_YEARLY="0"|' /etc/snapper/configs/root
+	
+	#activating the auto-cleanup
+	echo "Activating the auto-cleanup."
+	SCRUB=$(systemd-escape --template btrfs-scrub@.timer --path /dev/disk/by-uuid/${ROOT})
+	systemctl enable ${SCRUB}
+	systemctl enable snapper-timeline.timer
+	systemctl enable snapper-cleanup.timer
 
     # Installing CyberRe Grub theme
     echo -ne "
