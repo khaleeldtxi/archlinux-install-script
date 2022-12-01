@@ -605,6 +605,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     
     # Giving wheel user sudo access
     echo -e "$root_password\n$root_password" | passwd root
+    groupadd -r libvirt
+    gpasswd -a $username libvirt
     usermod -aG wheel root
     useradd -m -G wheel,libvirt -s /bin/zsh $username
     usermod -a -G wheel "$username" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
