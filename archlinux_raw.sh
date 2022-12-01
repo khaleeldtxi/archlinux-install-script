@@ -608,7 +608,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
     usermod -aG wheel root
     useradd -m $username
     usermod -aG wheel $username
-    groupadd -r libvirt
     gpasswd -a $username libvirt
     usermod -aG libvirt -s /bin/zsh $username
     usermod -a -G wheel "$username" && mkdir -p /home/"$username" && chown "$username":wheel /home/"$username"
