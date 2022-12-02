@@ -13,6 +13,7 @@ Nvidia
 
 
 ## Steps
+Edit Line# 216 - change Home partition size to your desired size. Root partition will then use the remaining size.
 
 Boot Arch Linux ISO  
 
