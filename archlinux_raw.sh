@@ -213,7 +213,7 @@ if [[ "$response" =~ ^(yes|y)$ ]]; then
     
     # create partitions
     sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
-    sgdisk -n 2:0:+5GiB ${DISK} # partition 1 (Home), default start block, 512GiB
+    sgdisk -n 2:0:+400GiB ${DISK} # partition 1 (Home), default start block, 512GiB
     sgdisk -n 3:0:0     ${DISK} # partition 2 (Root), default start block, remaining
 
     # set partition types
