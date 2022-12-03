@@ -39,7 +39,7 @@ timedatectl set-ntp true &>/dev/null
 
 pacman-key --init
 pacman-key --populate archlinux
-pacman -Sy
+pacman -Syy
 pacman -Sy archlinux-keyring --needed --noconfirm
 sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
@@ -214,7 +214,7 @@ if [[ "$response" =~ ^(yes|y)$ ]]; then
     # create partitions
     sgdisk -n 1:0:+1024M ${DISK} # partition 1 (UEFI), default start block, 1024MB
     sgdisk -n 2:0:+400GiB ${DISK} # partition 1 (Home), default start block, 512GiB
-    sgdisk -n 3:0:0     ${DISK} # partition 2 (Root), default start block, remaining
+    sgdisk -n 3:0:0 ${DISK} # partition 2 (Root), default start block, remaining
 
     # set partition types
     sgdisk -t 1:ef00 ${DISK}
@@ -254,9 +254,9 @@ echo -e "\nFormatting the EFI Partition as FAT32.\n$HR"
 mkfs.fat -F 32 -n EFI $ESP &>/dev/null
 
 # Formatting the partition as ROOT
-echo "Formatting the Root partition as ROOT."
-mkfs.btrfs -L Arch-Root -f -n 32k $ROOT &>/dev/null
-mkfs.btrfs -L Linux-Home -f -n 32k $HOME &>/dev/null
+echo "Formatting the Root & Home partition as btrfs."
+mkfs.btrfs -L "Arch-Root" -f -n 32k $ROOT &>/dev/null
+mkfs.btrfs -L "Linux-Home" -f -n 32k $HOME &>/dev/null
 
 mount -t btrfs $ROOT /mnt
 
@@ -349,7 +349,7 @@ echo -ne "
 "
 
 # Pacstrap (setting up a base sytem onto the new root)
-pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-applications plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm chrony libvirt konsole --noconfirm --needed
+pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools nvidia nvidia-utils nvidia-settings nvidia-dkms xorg-server-devel plasma sddm wireless_tools wpa_supplicant kde-applications plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts bluez-utils xdg-utils xdg-user-dirs ntfs-3g neofetch wget openssh cronie htop p7zip mlocate man-db wireplumber firefox qemu virt-manager ebtables qemu-arch-extra edk2-ovmf dnsmasq bridge-utils swtpm chrony libvirt konsole --noconfirm --needed
 
 #pacstrap /mnt base base-devel ${kernel} ${microcode} ${kernel}-headers linux-firmware grub grub-btrfs sudo networkmanager iptables-nft efibootmgr nano zram-generator reflector bash-completion btrfs-progs os-prober git curl apparmor terminus-font snapper snap-pac nano zsh zsh-doc grml-zsh-config zsh-autosuggestions zsh-completions zsh-history-substring-search zsh-syntax-highlighting zsh-lovers zsh-theme-powerlevel10k powerline firewalld dosfstools sysfsutils usbutils e2fsprogs vim git sddm which tree pipewire python-pip python-setuptools xorg-server-devel plasma-meta sddm wireless_tools wpa_supplicant kde-applications plasma-wayland-session egl-wayland qt5-wayland qt6-wayland bluez mtools inetutils less man-pages texinfo python-psutil pipewire-pulse pipewire-alsa pipewire-jack flatpak ntfs-3g chrony libvirt konsole --noconfirm --needed
 
