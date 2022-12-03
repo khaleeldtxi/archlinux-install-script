@@ -55,7 +55,8 @@ echo -ne "
 "
 
 # Update mirrors
-reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+#reflector --verbose --country $iso -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+reflector --verbose --country "Germany," -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
 pacman -S --noconfirm btrfs-progs gptfdisk reflector rsync glibc pacman-contrib terminus-font nano which tree
 
