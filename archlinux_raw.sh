@@ -8,7 +8,7 @@
 #                    ██║  ██║██║  ██║╚██████╗██║  ██║ 
 #                    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ 
 #---------------------------------------------------------------------
-#	    Automated Arch Btrfs Snapper KDE Nvidia Installer
+#	    Automated Arch Btrfs Snapper KDE Installer
 #-------------------------------------------------------------------------
 #"
 
@@ -559,16 +559,17 @@ arch-chroot /mnt /bin/bash -e <<EOF
     pacman -Syyu --noconfirm
     echo "Pacman eye-candy features installed."
     
-    #echo "Installing chaotic-aur"
-    #pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-    #pacman-key --lsign-key FBA220DFC880C036
-    #pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
-    #echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" >> /etc/pacman.conf
-    #sed -i '1 s|^|Server = https://es-mirror.chaotic.cx/$repo/$arch\n\n|' /etc/pacman.d/chaotic-mirrorlist
-    #pacman -Syyu --noconfirm
-    #echo "chaotic-aur installed."
+    echo "Installing chaotic-aur"
+    pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+    pacman-key --lsign-key FBA220DFC880C036
+    pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+    echo -e "\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n" >> /etc/pacman.conf
+    sed -i '1 s|^|Server = https://es-mirror.chaotic.cx/$repo/$arch\n\n|' /etc/pacman.d/chaotic-mirrorlist
+    pacman -Syyu --noconfirm
+    echo "chaotic-aur installed."
     
     # Initialize Pacman's keyring
+    echo "Initialize Pacman's keyring"
     pacman-key --init
     pacman-key --populate
 
@@ -656,7 +657,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Enabling Snapper automatic snapshots    
     systemctl enable snapper-timeline.timer &>/dev/null
     systemctl enable snapper-cleanup.timer &>/dev/null
-    systemctl enable grub-btrfs.path &>/dev/null
+    #systemctl enable grub-btrfs.path &>/dev/null
     echo "Enabled Snapper and automatic snapshots entries."
 
     # Setting umask to 077
@@ -707,14 +708,14 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     
     #echo -ne "
-    #-------------------------------------------------------------------------
-    #                        zsh configuration
-    #-------------------------------------------------------------------------
-    #"
-    #
-    #chsh -s /bin/zsh
-    #echo -e "$password" | sudo -u $username chsh -s /bin/zsh
-    #echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
+    -------------------------------------------------------------------------
+                            zsh configuration
+    -------------------------------------------------------------------------
+    "
+    
+    chsh -s /bin/zsh
+    echo -e "$password" | sudo -u $username chsh -s /bin/zsh
+    echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
 
 
     #Install paru
