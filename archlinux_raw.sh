@@ -704,7 +704,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     echo "Enabling libvirtd service"
     systemctl enable libvirtd &>/dev/null
-    usermod -G libvirt -a $username
+    #usermod -G libvirt -a $username
 
     
     #echo -ne "
