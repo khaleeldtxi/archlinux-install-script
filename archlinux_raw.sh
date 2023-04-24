@@ -715,7 +715,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     
     #chsh -s /bin/zsh
     #echo -e "$password" | sudo -u $username chsh -s /bin/zsh
-    #echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nsource /usr/share/doc/pkgfile/command-not-found.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
+    #echo -e "autoload -Uz promptinit\npromptinit\nprompt adam2\nsource /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\nsource /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\nsource /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh\nautoload -Uz run-help\nalias help=run-help" | tee -a /home/$username/.zshrc | tee -a /etc/zsh/zshrc
 
 
     #Install paru
