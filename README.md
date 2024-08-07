@@ -7,10 +7,6 @@ The Archlinux-Install-Script allow the entire Arch Linux installation process to
 Btrfs - Subvolumes (Inspired by OpenSuse layout)  
 Snapper  
 KDE-Plasma  
-Wayland  
-Nvidia
-
-
 
 ## Steps
 Edit Line# 216 - change Home partition size to your desired size. Root partition will then use the remaining size.
