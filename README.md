@@ -1,4 +1,4 @@
-# Archlinux-Install-Script
+![image](https://github.com/user-attachments/assets/c359b68d-8a92-4252-bfa4-83f2f1080d31)# Archlinux-Install-Script
 
 The Archlinux-Install-Script allow the entire Arch Linux installation process to be automated.
 
@@ -9,7 +9,9 @@ Snapper
 KDE-Plasma  
 
 ## Steps
-Edit Line# 216 - change Home partition size to your desired size. Root partition will then use the remaining size.
+Edit Home partition size to your desired size. Root partition will then use the remaining size.
+You will find Home partition size under "Formating Disk" header in "# create partitions" section.
+
 
 Boot Arch Linux ISO  
 
