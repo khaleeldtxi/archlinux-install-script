@@ -9,7 +9,7 @@ Snapper
 KDE-Plasma  
 
 ## Steps
-Edit Home partition size to your desired size. Root partition will then use the remaining size.
+Edit Home partition size to your desired size. Root partition will then use the remaining size. 
 You will find Home partition size under "Formating Disk" header in "# create partitions" section.
 
 
