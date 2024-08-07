@@ -429,9 +429,9 @@ echo "Setting GRUB configuration file permissions"
 chmod 755 /mnt/etc/grub.d/*
 
 # Configure AppArmor Parser caching
-echo "Configure AppArmor Parser caching"
-sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
-sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
+#echo "Configure AppArmor Parser caching"
+#sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
+#sed -i 's,#Include /etc/apparmor.d/,Include /etc/apparmor.d/,g' /mnt/etc/apparmor/parser.conf
 
 # Blacklisting kernel modules
 echo "Blacklisting kernel modules"
@@ -687,20 +687,20 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     grub-mkconfig -o /boot/grub/grub.cfg
     
-    echo "creating ~/.config/autostart - required to enable AppArmor notifications"
-    mkdir -p -m 700 /home/${username}/.config/autostart &>/dev/null
-    chown -R $username:$username /home/${username}/.config &>/dev/null
-    chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
-    chmod 700 /home/${username}/.config/autostart &>/dev/null
-    touch /home/${username}/.config/autostart/apparmor-notify.desktop
-    echo "created ~/.config/autostart"
+    #echo "creating ~/.config/autostart - required to enable AppArmor notifications"
+    #mkdir -p -m 700 /home/${username}/.config/autostart &>/dev/null
+    #chown -R $username:$username /home/${username}/.config &>/dev/null
+    #chown -R $username:$username /home/${username}/.config/autostart &>/dev/null
+    #chmod 700 /home/${username}/.config/autostart &>/dev/null
+    #touch /home/${username}/.config/autostart/apparmor-notify.desktop
+    #echo "created ~/.config/autostart"
     
     # Enabling AppArmor
-    echo "Enabling AppArmor."
-    systemctl enable apparmor &>/dev/null
-    systemctl enable auditd.service &>/dev/null
-    sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
-    echo "AppArmor enabled."
+    #echo "Enabling AppArmor."
+    #systemctl enable apparmor &>/dev/null
+    #systemctl enable auditd.service &>/dev/null
+    #sed -i 's/^log_group = root/log_group = audit/g' /etc/audit/auditd.conf
+    #echo "AppArmor enabled."
 
     echo "Enabling libvirtd service"
     systemctl enable libvirtd &>/dev/null
@@ -755,30 +755,30 @@ arch-chroot /mnt /bin/bash -e <<EOF
 	systemctl enable snapper-cleanup.timer
 
     # Installing CyberRe Grub theme
-    echo -ne "
-    -------------------------------------------------------------------------
-                          Installing CyberRe Grub theme
-    -------------------------------------------------------------------------
-    "
-    THEME_DIR=/boot/grub/themes
-    THEME_NAME=CyberRe
-    echo -e "Creating the theme directory..."
-    mkdir -p /boot/grub/themes/CyberRe
-    echo -e "Copying the theme..."
-    git clone https://github.com/khaleeldtxi/archlinux-install-script
-    cp -a archlinux-install-script/CyberRe/* /boot/grub/themes/CyberRe
-    echo -e "Backing up Grub config..."
-    cp -an /etc/default/grub /etc/default/grub.bak
-    echo -e "Setting the theme as the default..."
-    grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
-    chown $username:$username /etc/default/grub
-    echo -e "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
-    echo -e "Updating grub..."
-    sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
-    echo "Regenerate Grub configuration"
-    grub-mkconfig -o /boot/grub/grub.cfg
-    echo -e "All set!"
-    echo "CyberRe Grub theme installed."    
+    #echo -ne "
+    #-------------------------------------------------------------------------
+    #                      Installing CyberRe Grub theme
+    #-------------------------------------------------------------------------
+    #"
+    #THEME_DIR=/boot/grub/themes
+    #THEME_NAME=CyberRe
+    #echo -e "Creating the theme directory..."
+    #mkdir -p /boot/grub/themes/CyberRe
+    #echo -e "Copying the theme..."
+    #git clone https://github.com/khaleeldtxi/archlinux-install-script
+    #cp -a archlinux-install-script/CyberRe/* /boot/grub/themes/CyberRe
+    #echo -e "Backing up Grub config..."
+    #cp -an /etc/default/grub /etc/default/grub.bak
+    #echo -e "Setting the theme as the default..."
+    #grep "GRUB_THEME=" /etc/default/grub 2>&1 >/dev/null && sed -i '/GRUB_THEME=/d' /etc/default/grub
+    #chown $username:$username /etc/default/grub
+    #echo -e "GRUB_THEME=\"/boot/grub/themes/CyberRe/theme.txt\"" >> /etc/default/grub
+    #echo -e "Updating grub..."
+    #sed -i 's/#GRUB_DISABLE_OS_PROBER=false/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
+    #echo "Regenerate Grub configuration"
+    #grub-mkconfig -o /boot/grub/grub.cfg
+    #echo -e "All set!"
+    #echo "CyberRe Grub theme installed."    
     
     
 EOF
@@ -787,27 +787,27 @@ EOF
 
 # Enable AppArmor notifications
 # Must create ~/.config/autostart first
-echo -ne "
--------------------------------------------------------------------------
-                     Enable AppArmor notifications
--------------------------------------------------------------------------
-"
-bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
-[Desktop Entry]
-Type=Application
-Name=AppArmor Notify
-Comment=Receive on screen notifications of AppArmor denials
-TryExec=aa-notify
-Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
-StartupNotify=false
-NoDisplay=true
-EOF
-chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
-arch-chroot /mnt chown -R $username:$username /home/${username}/.config
+#echo -ne "
+#-------------------------------------------------------------------------
+#                     Enable AppArmor notifications
+#-------------------------------------------------------------------------
+#"
+#bash -c "cat > /mnt/home/${username}/.config/autostart/apparmor-notify.desktop" <<-'EOF'
+#[Desktop Entry]
+#Type=Application
+#Name=AppArmor Notify
+#Comment=Receive on screen notifications of AppArmor denials
+#TryExec=aa-notify
+#Exec=aa-notify -p -s 1 -w 60 -f /var/log/audit/audit.log
+#StartupNotify=false
+#NoDisplay=true
+#EOF
+#chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
+#arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
 # Enabling AppArmor.
-echo "Enabling AppArmor."
-systemctl enable apparmor --root=/mnt &>/dev/null
+#echo "Enabling AppArmor."
+#systemctl enable apparmor --root=/mnt &>/dev/null
 
 # Disabling systemd-timesyncd
 echo "Disabling systemd-timesyncd"
