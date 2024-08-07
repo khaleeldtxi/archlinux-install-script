@@ -545,19 +545,19 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Set keymap"
     echo "KEYMAP=us" > /etc/vconsole.conf
 
-    echo -ne "
-    -------------------------------------------------------------------------
-                         Installing Pacman eye-candy features
-    -------------------------------------------------------------------------
-    "
+    #echo -ne "
+    #-------------------------------------------------------------------------
+    #                     Installing Pacman eye-candy features
+    #-------------------------------------------------------------------------
+    #"
 
     # Pacman eye-candy features
-    sed -i 's/#Color/Color\nILoveCandy/' /etc/pacman.conf
-    sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
-    sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
-    sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
-    pacman -Syyu --noconfirm
-    echo "Pacman eye-candy features installed."
+    #sed -i 's/#Color/Color\nILoveCandy/' /etc/pacman.conf
+    #sed -i 's/#VerbosePkgLists/VerbosePkgLists/' /etc/pacman.conf
+    #sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
+    #sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf
+    #pacman -Syyu --noconfirm
+    #echo "Pacman eye-candy features installed."
     
     #echo "Installing chaotic-aur"
     #pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
@@ -720,18 +720,18 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     #Install paru
     echo -ne "
-    -------------------------------------------------------------------------
-                          Installing paru - aur helper
-    -------------------------------------------------------------------------
-    "
-    cd /home/$username/
-    sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
-    cd paru-bin/ || exit
-    sudo -u $username makepkg --noconfirm -si
-    cd /home/$username/ || exit
-    sudo -u $username paru --noconfirm -Syu
-    sed -i '$ d' /etc/sudoers
-    echo "paru installed."
+    #-------------------------------------------------------------------------
+    #                      Installing paru - aur helper
+    #-------------------------------------------------------------------------
+    #"
+    #cd /home/$username/
+    #sudo -u $username git clone https://aur.archlinux.org/paru-bin.git
+    #cd paru-bin/ || exit
+    #sudo -u $username makepkg --noconfirm -si
+    #cd /home/$username/ || exit
+    #sudo -u $username paru --noconfirm -Syu
+    #sed -i '$ d' /etc/sudoers
+    #echo "paru installed."
 
     # Enabling Reflector timer
     systemctl enable reflector.timer &>/dev/null
