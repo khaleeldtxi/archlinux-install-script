@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/c359b68d-8a92-4252-bfa4-83f2f1080d31)# Archlinux-Install-Script
+# Archlinux-Install-Script
 
 The Archlinux-Install-Script allow the entire Arch Linux installation process to be automated.
 
